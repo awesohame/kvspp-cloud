@@ -3,6 +3,8 @@ package com.kvsppdemo.demo.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "users")
@@ -22,8 +24,18 @@ public class User {
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 
+    @ManyToMany
+    @JoinTable(
+        name = "user_stores",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "store_id")
+    )
+    private Set<Store> stores = new HashSet<>();
+
+    // getters and setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
+
     public String getGoogleId() { return googleId; }
     public void setGoogleId(String googleId) { this.googleId = googleId; }
     public String getEmail() { return email; }
@@ -33,7 +45,8 @@ public class User {
     public String getProfilePicture() { return profilePicture; }
     public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
     public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public Set<Store> getStores() { return stores; }
+    public void setStores(Set<Store> stores) { this.stores = stores; }
 }
