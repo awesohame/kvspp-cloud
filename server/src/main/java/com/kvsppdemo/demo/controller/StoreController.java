@@ -131,4 +131,77 @@ public class StoreController {
         storeRepository.delete(store);
         return ResponseEntity.ok(new ApiResponse("success", "Store deleted"));
     }
+
+    @PutMapping("/{token}")
+    public ResponseEntity<ApiResponse> updateStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @RequestBody Map<String, String> body) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
+        }
+        String googleId = (String) principal.getAttribute("sub");
+        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
+        }
+        Store store = storeRepository.findByToken(token);
+        if (store == null) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
+        }
+        if (!store.getOwners().contains(userOpt.get())) {
+            return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
+        }
+        boolean changed = false;
+        if (body.containsKey("name")) {
+            String name = body.get("name");
+            if (name != null && !name.isBlank()) {
+                store.setName(name);
+                changed = true;
+            }
+        }
+        if (body.containsKey("description")) {
+            store.setDescription(body.get("description"));
+            changed = true;
+        }
+        if (changed) {
+            storeRepository.save(store);
+            return ResponseEntity.ok(new ApiResponse("success", "Store updated"));
+        } else {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", "No valid fields to update"));
+        }
+    }
+
+    @PostMapping("/{token}/owners")
+    public ResponseEntity<ApiResponse> addOwnerToStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @RequestBody Map<String, String> body) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
+        }
+        String googleId = (String) principal.getAttribute("sub");
+        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
+        }
+        Store store = storeRepository.findByToken(token);
+        if (store == null) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
+        }
+        if (!store.getOwners().contains(userOpt.get())) {
+            return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
+        }
+        String email = body.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", "Email is required"));
+        }
+        Optional<User> newOwnerOpt = userRepository.findByEmail(email);
+        if (newOwnerOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "User to add as owner not found"));
+        }
+        User newOwner = newOwnerOpt.get();
+        if (store.getOwners().contains(newOwner)) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", "User is already an owner"));
+        }
+        store.getOwners().add(newOwner);
+        newOwner.getStores().add(store);
+        storeRepository.save(store);
+        userRepository.save(newOwner);
+        return ResponseEntity.ok(new ApiResponse("success", "Owner added to store"));
+    }
 }
