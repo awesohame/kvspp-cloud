@@ -12,16 +12,23 @@ import com.github.dockerjava.zerodep.ZerodepDockerHttpClient;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.beans.factory.annotation.Value;
 
-import java.time.Duration;
 import java.util.List;
+import java.io.File;
 
 @Service
-public class DockerService {
+public class DockerService implements SmartLifecycle {
     private static final String CONTAINER_NAME = "kvspp";
     private static final String IMAGE_NAME = "awesohame/kvspp-cli";
     private static final Logger logger = LoggerFactory.getLogger(DockerService.class);
     private DockerClient dockerClient;
+
+    private volatile boolean running = false;
+
+    @Value("${docker.kvspp.store-path:/store}")
+    private String storePath;
 
     public DockerService() {
         logger.info("DockerService constructor entered");
@@ -34,12 +41,9 @@ public class DockerService {
 
             // Try Docker Desktop endpoints first (most common on Windows)
             String[] dockerHosts = {
-                "npipe:////./pipe/dockerDesktopLinuxEngine",  // Docker Desktop Linux engine (correct endpoint)
+                "npipe:////./pipe/dockerDesktopLinuxEngine",  // Docker Desktop Linux engine
                 "npipe:////./pipe/docker_engine",             // Standard Docker engine
                 null,                                         // Default configuration
-                // Only try TCP if you have enabled it in Docker Desktop settings
-                // "tcp://localhost:2375",
-                // "tcp://127.0.0.1:2375"
             };
 
             for (String dockerHost : dockerHosts) {
@@ -108,12 +112,60 @@ public class DockerService {
         }
     }
 
+    @Override
+    public void start() {
+        logger.info("SmartLifecycle start() called: Ensuring kvspp container is running...");
+        ensureKvsppContainerRunning();
+        running = isKvsppContainerActuallyRunning();
+    }
+
+    @Override
+    public void stop() {
+        logger.info("SmartLifecycle stop() called: Stopping kvspp container...");
+        stopKvsppContainer();
+        running = false;
+        cleanup();
+    }
+
+    @Override
+    public boolean isRunning() {
+        running = isKvsppContainerActuallyRunning();
+        return running;
+    }
+
+    @Override
+    public boolean isAutoStartup() {
+        return true;
+    }
+
+    @Override
+    public int getPhase() {
+        return 0; // Default phase
+    }
+
+    @Override
+    public void stop(Runnable callback) {
+        stop();
+        callback.run();
+    }
+
     public void ensureKvsppContainerRunning() {
         if (dockerClient == null) {
             logger.warn("Docker client is not available. Cannot ensure container is running.");
             return;
         }
         try {
+            // Ensure the host store directory exists
+            File storeDir = new File(storePath);
+            if (!storeDir.exists()) {
+                boolean created = storeDir.mkdirs();
+                if (created) {
+                    logger.info("Created host store directory: {}", storePath);
+                } else {
+                    logger.warn("Failed to create host store directory: {}", storePath);
+                }
+            }
+
             // Check if container exists and is running
             List<Container> containers = dockerClient.listContainersCmd()
                     .withShowAll(true)
@@ -155,11 +207,12 @@ public class DockerService {
             }
 
             // Create and start container
-            logger.info("Creating container: {}", CONTAINER_NAME);
+            logger.info("Creating container: {} with volume {}:/app/store", CONTAINER_NAME, storePath);
             CreateContainerResponse container = dockerClient.createContainerCmd(IMAGE_NAME)
                     .withName(CONTAINER_NAME)
                     .withTty(true)
                     .withStdinOpen(true)
+                    .withBinds(new com.github.dockerjava.api.model.Bind(storePath, new com.github.dockerjava.api.model.Volume("/app/store")))
                     .exec();
 
             dockerClient.startContainerCmd(container.getId()).exec();
@@ -199,6 +252,23 @@ public class DockerService {
             }
         } catch (Exception e) {
             logger.error("Error closing Docker client: {}", e.getMessage(), e);
+        }
+    }
+
+    // Helper to check if the container is running
+    private boolean isKvsppContainerActuallyRunning() {
+        if (dockerClient == null) return false;
+        try {
+            List<Container> containers = dockerClient.listContainersCmd()
+                    .withShowAll(true)
+                    .withNameFilter(List.of(CONTAINER_NAME))
+                    .exec();
+            return containers.stream()
+                    .anyMatch(c -> c.getNames()[0].contains(CONTAINER_NAME) &&
+                            c.getState().equalsIgnoreCase("running"));
+        } catch (Exception e) {
+            logger.error("Error checking container state: {}", e.getMessage(), e);
+            return false;
         }
     }
 }

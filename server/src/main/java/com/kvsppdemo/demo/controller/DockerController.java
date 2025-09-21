@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
+// Debugging endpoint: not used in actual container startup, only for manual testing
 @RestController
 @RequestMapping("/docker")
 public class DockerController {
