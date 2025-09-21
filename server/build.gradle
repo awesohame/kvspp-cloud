@@ -28,8 +28,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-	implementation 'com.github.docker-java:docker-java:3.3.6'
-	implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.3.6'
+	implementation('com.github.docker-java:docker-java:3.4.0') {
+		exclude group: 'com.github.docker-java', module: 'docker-java-transport-jersey'
+		exclude group: 'com.github.docker-java', module: 'docker-java-transport-netty'
+		exclude group: 'com.github.docker-java', module: 'docker-java-transport-httpclient5'
+	}
+	implementation 'com.github.docker-java:docker-java-transport-zerodep:3.4.0'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -39,6 +43,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'com.h2database:h2'
 }
 
 tasks.named('test') {
