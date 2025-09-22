@@ -4,6 +4,7 @@ import com.kvsppdemo.demo.model.Store;
 import com.kvsppdemo.demo.model.User;
 import com.kvsppdemo.demo.repository.StoreRepository;
 import com.kvsppdemo.demo.repository.UserRepository;
+import com.kvsppdemo.demo.service.KvsppTcpClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +20,8 @@ public class StoreController {
     private StoreRepository storeRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private KvsppTcpClientService kvsppTcpClientService;
 
     @PostMapping
     public ResponseEntity<ApiResponse> createStore(@AuthenticationPrincipal OAuth2User principal, @RequestBody Map<String, String> body) {
@@ -203,5 +206,132 @@ public class StoreController {
         storeRepository.save(store);
         userRepository.save(newOwner);
         return ResponseEntity.ok(new ApiResponse("success", "Owner added to store"));
+    }
+
+    // --- KVS++ TCP Endpoints ---
+
+    @GetMapping("/{token}/{key}")
+    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @PathVariable String key) {
+        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
+        if (access != null) return access;
+        try {
+            String output = kvsppTcpClientService.sendCommand(token, "GET " + key);
+            if (output != null && output.startsWith("VALUE ")) {
+                String value = output.substring(6);
+                return ResponseEntity.ok(new ApiResponse("success", "Value fetched", Map.of("value", value)));
+            } else if ("NOT_FOUND".equals(output)) {
+                return ResponseEntity.ok(new ApiResponse("success", "Key not found", Map.of("value", null)));
+            } else if (output != null && output.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", output));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + output));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{token}/{key}")
+    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @PathVariable String key, @RequestBody Map<String, String> body) {
+        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
+        if (access != null) return access;
+        String value = body.get("value");
+        if (value == null) return ResponseEntity.badRequest().body(new ApiResponse("error", "Missing value"));
+        try {
+            String output = kvsppTcpClientService.sendCommand(token, "SET " + key + " " + value);
+            if ("OK".equals(output)) {
+                return ResponseEntity.ok(new ApiResponse("success", "Value stored"));
+            } else if (output != null && output.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", output));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + output));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{token}/{key}")
+    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @PathVariable String key) {
+        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
+        if (access != null) return access;
+        try {
+            String output = kvsppTcpClientService.sendCommand(token, "DELETE " + key);
+            if ("OK".equals(output)) {
+                return ResponseEntity.ok(new ApiResponse("success", "Key deleted"));
+            } else if (output != null && output.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", output));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + output));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{token}/save")
+    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @RequestBody(required = false) Map<String, String> body) {
+        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
+        if (access != null) return access;
+        String filename = (body != null) ? body.get("filename") : null;
+        try {
+            String cmd = (filename != null && !filename.isBlank()) ? "SAVE " + filename : "SAVE";
+            String output = kvsppTcpClientService.sendCommand(token, cmd);
+            if ("OK".equals(output)) {
+                return ResponseEntity.ok(new ApiResponse("success", "Store saved"));
+            } else if (output != null && output.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", output));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + output));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{token}/load")
+    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @RequestBody(required = false) Map<String, String> body) {
+        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
+        if (access != null) return access;
+        String filename = (body != null) ? body.get("filename") : null;
+        try {
+            String cmd = (filename != null && !filename.isBlank()) ? "LOAD " + filename : "LOAD";
+            String output = kvsppTcpClientService.sendCommand(token, cmd);
+            if ("OK".equals(output)) {
+                return ResponseEntity.ok(new ApiResponse("success", "Store loaded"));
+            } else if (output != null && output.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", output));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + output));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
+    }
+
+    // No direct help command in TCP protocol, so this can be omitted or return static info
+    @GetMapping("/help")
+    public ResponseEntity<ApiResponse> help() {
+        return ResponseEntity.ok(new ApiResponse("success", "Help output", Map.of("output", "See documentation for available commands.")));
+    }
+
+    // Helper to check access and return error if not allowed
+    private ResponseEntity<ApiResponse> checkAccess(OAuth2User principal, String token) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
+        }
+        String googleId = (String) principal.getAttribute("sub");
+        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
+        }
+        Store store = storeRepository.findByToken(token);
+        if (store == null) {
+            return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
+        }
+        if (!store.getOwners().contains(userOpt.get())) {
+            return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
+        }
+        return null;
     }
 }
