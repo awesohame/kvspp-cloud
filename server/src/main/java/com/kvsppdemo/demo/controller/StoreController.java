@@ -270,10 +270,10 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/save")
-    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @RequestBody(required = false) Map<String, String> body) {
+    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
-        String filename = (body != null) ? body.get("filename") : null;
+        String filename = token;
         try {
             String cmd = (filename != null && !filename.isBlank()) ? "SAVE " + filename : "SAVE";
             String output = kvsppTcpClientService.sendCommand(token, cmd);
@@ -290,15 +290,46 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/load")
-    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @RequestBody(required = false) Map<String, String> body) {
+    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
-        String filename = (body != null) ? body.get("filename") : null;
+        String filename = token;
         try {
             String cmd = (filename != null && !filename.isBlank()) ? "LOAD " + filename : "LOAD";
             String output = kvsppTcpClientService.sendCommand(token, cmd);
             if ("OK".equals(output)) {
                 return ResponseEntity.ok(new ApiResponse("success", "Store loaded"));
+            } else if (output != null && output.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", output));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + output));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{token}/autosave")
+    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @RequestBody Map<String, Object> body) {
+        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
+        if (access != null) return access;
+        Object autosaveObj = body.get("autosave");
+        if (autosaveObj == null) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", "Missing 'autosave' field (true/false or 'on'/'off')"));
+        }
+        String value;
+        if (autosaveObj instanceof Boolean) {
+            value = ((Boolean) autosaveObj) ? "ON" : "OFF";
+        } else {
+            String str = autosaveObj.toString().trim().toUpperCase();
+            if (str.equals("ON") || str.equals("TRUE")) value = "ON";
+            else if (str.equals("OFF") || str.equals("FALSE")) value = "OFF";
+            else return ResponseEntity.badRequest().body(new ApiResponse("error", "Invalid value for 'autosave'. Use true/false or 'on'/'off'"));
+        }
+        try {
+            String output = kvsppTcpClientService.sendCommand(token, "AUTOSAVE " + value);
+            if ("OK".equals(output)) {
+                return ResponseEntity.ok(new ApiResponse("success", "Autosave set to " + value));
             } else if (output != null && output.startsWith("ERROR")) {
                 return ResponseEntity.status(400).body(new ApiResponse("error", output));
             } else {
