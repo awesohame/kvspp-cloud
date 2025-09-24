@@ -193,7 +193,7 @@ export function AccountSettings() {
           {/* Danger Zone */}
           <Card className="border-destructive/20">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-destructive">
+              <CardTitle className="flex items-center space-x-2 text-red-500">
                 <Trash2 className="w-5 h-5" />
                 <span>Danger Zone</span>
               </CardTitle>
@@ -226,7 +226,7 @@ export function AccountSettings() {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteAccount}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="bg-destructive text-red-500-foreground hover:bg-destructive/90"
                       >
                         Yes, delete my account
                       </AlertDialogAction>

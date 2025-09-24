@@ -297,7 +297,7 @@ export function StoreDetail() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteKey(key)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-red-500 hover:text-red-500"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

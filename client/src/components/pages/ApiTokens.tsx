@@ -216,7 +216,7 @@ export function ApiTokens() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive">
+                        <Button variant="ghost" size="sm" className="text-red-500">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </AlertDialogTrigger>
@@ -232,7 +232,7 @@ export function ApiTokens() {
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDeleteToken(token.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="bg-destructive text-red-500-foreground hover:bg-destructive/90"
                           >
                             Delete Token
                           </AlertDialogAction>

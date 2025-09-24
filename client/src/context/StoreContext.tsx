@@ -19,7 +19,7 @@ const storeReducer = (state: StoreState, action: StoreAction): StoreState => {
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_STORES': {
-      console.log('SET_STORES action payload:', action.payload);
+      // console.log('SET_STORES action payload:', action.payload);
       const stores = Array.isArray(action.payload) ? action.payload : [];
       return { ...state, stores, loading: false, error: null };
     }
@@ -73,8 +73,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const createStore = async (name: string, description: string) => {
     try {
-      const store = await apiService.createStore(name, description);
-      dispatch({ type: 'ADD_STORE', payload: store });
+      const storeResponse = await apiService.createStore(name, description);
+      dispatch({ type: 'ADD_STORE', payload: storeResponse.data });
     } catch (error: unknown) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to create store' });
       console.error('Failed to create store', error);

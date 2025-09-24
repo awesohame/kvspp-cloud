@@ -38,8 +38,8 @@ class ApiService {
   }
 
   // Store management
-  async createStore(name: string, description: string): Promise<Store> {
-    return this.request<Store>('/store', {
+  async createStore(name: string, description: string): Promise<{ status: string; message: string; data: Store }> {
+    return this.request<{ status: string; message: string; data: Store }>('/store', {
       method: 'POST',
       body: JSON.stringify({ name, description }),
     });

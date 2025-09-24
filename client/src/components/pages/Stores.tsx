@@ -33,10 +33,12 @@ export function Stores() {
     fetchStores();
   }, [fetchStores]);
 
-  const filteredStores = stores.filter(store =>
-    store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    store.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredStores = stores.filter(store => {
+    return (
+      (store.name?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
+      (store.description?.toLowerCase() ?? '').includes(searchQuery.toLowerCase())
+    );
+  });
 
   const handleCreateStore = async () => {
     if (!newStore.name.trim()) return;
@@ -183,7 +185,7 @@ export function Stores() {
                         Manage Access
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-destructive"
+                        className="text-red-500"
                         onClick={() => handleDeleteStore(store.token)}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
