@@ -1,21 +1,7 @@
-import { createContext, useReducer, ReactNode, useCallback } from 'react';
-import { Store } from '../types/api';
+import { useReducer, ReactNode, useCallback } from 'react';
 import { apiService } from '../services/api';
-
-interface StoreState {
-  stores: Store[];
-  currentStore: Store | null;
-  loading: boolean;
-  error: string | null;
-}
-
-interface StoreContextType extends StoreState {
-  fetchStores: () => Promise<void>;
-  createStore: (name: string, description: string) => Promise<void>;
-  updateStore: (token: string, name: string, description: string) => Promise<void>;
-  deleteStore: (token: string) => Promise<void>;
-  setCurrentStore: (store: Store | null) => void;
-}
+import { StoreState } from '../types/ContextTypes';
+import { Store } from '../types/api';
 
 type StoreAction =
   | { type: 'SET_LOADING'; payload: boolean }
@@ -26,14 +12,17 @@ type StoreAction =
   | { type: 'UPDATE_STORE'; payload: Store }
   | { type: 'REMOVE_STORE'; payload: string };
 
-const StoreContext = createContext<StoreContextType | undefined>(undefined);
+import { StoreContext } from './ContextValues';
 
 const storeReducer = (state: StoreState, action: StoreAction): StoreState => {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
-    case 'SET_STORES':
-      return { ...state, stores: action.payload, loading: false, error: null };
+    case 'SET_STORES': {
+      console.log('SET_STORES action payload:', action.payload);
+      const stores = Array.isArray(action.payload) ? action.payload : [];
+      return { ...state, stores, loading: false, error: null };
+    }
     case 'SET_CURRENT_STORE':
       return { ...state, currentStore: action.payload };
     case 'SET_ERROR':
@@ -74,8 +63,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const fetchStores = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const stores = await apiService.getStores();
-      dispatch({ type: 'SET_STORES', payload: stores });
+      const storesResponse = await apiService.getStores();
+      dispatch({ type: 'SET_STORES', payload: storesResponse.data });
     } catch (error: unknown) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch stores' });
       console.error('Failed to fetch stores', error);

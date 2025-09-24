@@ -43,7 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = () => {
-    window.location.href = '/oauth2/authorization/google';
+    const url = import.meta.env.VITE_API_BASE_URL;
+    const finalUrl = url + '/oauth2/authorization/google';
+    window.location.href = finalUrl;
   };
 
   const logout = async () => {

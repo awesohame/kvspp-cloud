@@ -45,8 +45,8 @@ class ApiService {
     });
   }
 
-  async getStores(): Promise<Store[]> {
-    return this.request<Store[]>('/store');
+  async getStores(): Promise<{ status: string; message: string; data: Store[] }> {
+    return this.request<{ status: string; message: string; data: Store[] }>('/store');
   }
 
   async getStore(token: string): Promise<Store> {

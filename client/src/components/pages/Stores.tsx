@@ -8,7 +8,7 @@ import {
   Users,
   MoreHorizontal,
   Search,
-  Calendar
+  // Calendar
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
@@ -160,10 +160,10 @@ export function Stores() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">{store.name}</CardTitle>
-                      <div className="flex items-center text-xs text-muted-foreground mt-1">
+                      {/* <div className="flex items-center text-xs text-muted-foreground mt-1">
                         <Calendar className="w-3 h-3 mr-1" />
                         {new Date(store.createdAt).toLocaleDateString()}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 

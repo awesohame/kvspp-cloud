@@ -32,7 +32,7 @@ import { LoadingSpinner } from './components/ui/loading-spinner';
 // }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -40,10 +40,6 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
         <LoadingSpinner className="w-8 h-8" />
       </div>
     );
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard/stores" replace />;
   }
 
   return <>{children}</>;
@@ -67,9 +63,7 @@ function AppRoutes() {
         path="/dashboard"
         element={
           // <ProtectedRoute>
-          <StoreProvider>
-            <DashboardLayout />
-          </StoreProvider>
+          <DashboardLayout />
           // </ProtectedRoute>
         }
       >
@@ -91,11 +85,13 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-background text-foreground">
-          <AppRoutes />
-        </div>
-      </Router>
+      <StoreProvider>
+        <Router>
+          <div className="min-h-screen bg-background text-foreground">
+            <AppRoutes />
+          </div>
+        </Router>
+      </StoreProvider>
     </AuthProvider>
   );
 }
