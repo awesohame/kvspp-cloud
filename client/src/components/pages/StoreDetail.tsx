@@ -20,17 +20,18 @@ import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
+import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { useStore } from '../../context/ContextHooks';
 import { apiService } from '../../services/api';
+import type { Store } from '@/types/api';
 // import { LoadingSpinner } from '../ui/loading-spinner';
 
 export function StoreDetail() {
   const { token } = useParams<{ token: string }>();
   const { updateStore } = useStore();
   const navigate = useNavigate();
-  const [storeDetails, setStoreDetails] = useState<{ token: string; name: string; description: string; store: Record<string, string | number | boolean | object | null>; createdAt?: string; updatedAt?: string } | null>(null);
-  const [storeData, setStoreData] = useState<Record<string, string | number | boolean | object | null>>({});
+  const [storeDetails, setStoreDetails] = useState<Store | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddKeyOpen, setIsAddKeyOpen] = useState(false);
   const [isEditStoreOpen, setIsEditStoreOpen] = useState(false);
@@ -38,53 +39,50 @@ export function StoreDetail() {
   const [editingStore, setEditingStore] = useState({ name: '', description: '' });
   const [autosave, setAutosave] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [autosaveLoading, setAutosaveLoading] = useState(false);
 
   useEffect(() => {
     const fetchStoreDetails = async () => {
       if (!token) return;
-
       try {
         setLoading(true);
         const response = await apiService.getStore(token);
-        console.log(response.data)
-        setStoreDetails(response.data);
-        setStoreData(response.data.store || {});
+        const store: Store = response.data;
+        setStoreDetails(store);
+        console.log('Store details:', store);
         setEditingStore({
-          name: response.data.name,
-          description: response.data.description
+          name: store.name || '',
+          description: store.description || ''
         });
-        setAutosave(typeof response.data.store?.autosave === 'boolean' ? response.data.store.autosave : false);
+        setAutosave(typeof store.store?.autosave === 'boolean' ? store.store.autosave : false);
       } catch (error: unknown) {
         console.error('Failed to fetch store details:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchStoreDetails();
   }, [token]);
 
-  const filteredKeys = Object.keys(storeData).filter(key => {
-    if (key === 'autosave') return false; // Don't show autosave as a key-value pair
-    return (
-      key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      JSON.stringify(storeData[key]).toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  // Store Data tab: show all keys except 'autosave'
+  const filteredKeys = storeDetails && storeDetails.store
+    ? Object.keys(storeDetails.store).filter(key => key !== 'autosave' && key.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
 
   const handleAddKey = async () => {
     if (!token || !newKey.key.trim()) return;
-
     try {
-      let value: string | number | boolean | object | null = newKey.value;
+      let value: string | number | boolean = newKey.value;
       try {
         value = JSON.parse(newKey.value);
       } catch {
         // Keep as string if not valid JSON
       }
-
       await apiService.setValue(token, newKey.key, value);
-      setStoreData(prev => ({ ...prev, [newKey.key]: value }));
+      setStoreDetails(prev => prev && prev.store
+        ? { ...prev, store: { ...prev.store, [newKey.key]: value } }
+        : prev
+      );
       setNewKey({ key: '', value: '' });
       setIsAddKeyOpen(false);
     } catch (error: unknown) {
@@ -94,14 +92,12 @@ export function StoreDetail() {
 
   const handleDeleteKey = async (key: string) => {
     if (!token || !window.confirm(`Are you sure you want to delete the key "${key}"?`)) return;
-
     try {
       await apiService.deleteValue(token, key);
-      setStoreData(prev => {
-        const newData = { ...prev };
-        delete newData[key];
-        return newData;
-      });
+      setStoreDetails(prev => prev && prev.store
+        ? { ...prev, store: Object.fromEntries(Object.entries(prev.store).filter(([k]) => k !== key)) }
+        : prev
+      );
     } catch (error: unknown) {
       console.error('Failed to delete key:', error);
     }
@@ -120,12 +116,14 @@ export function StoreDetail() {
 
   const handleToggleAutosave = async (enabled: boolean) => {
     if (!token) return;
-
+    setAutosaveLoading(true);
     try {
       await apiService.setAutosave(token, enabled);
       setAutosave(enabled);
     } catch (error: unknown) {
       console.error('Failed to toggle autosave:', error);
+    } finally {
+      setAutosaveLoading(false);
     }
   };
 
@@ -341,7 +339,7 @@ export function StoreDetail() {
                     </CardHeader>
                     <CardContent>
                       <pre className="text-sm bg-muted p-3 rounded-md overflow-x-auto">
-                        {JSON.stringify(storeData[key], null, 2)}
+                        {JSON.stringify(storeDetails?.store?.[key], null, 2)}
                       </pre>
                     </CardContent>
                   </Card>
@@ -365,10 +363,16 @@ export function StoreDetail() {
                         Automatically save changes to persistent storage
                       </p>
                     </div>
-                    <Switch
-                      checked={autosave}
-                      onCheckedChange={handleToggleAutosave}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={autosave}
+                        onCheckedChange={handleToggleAutosave}
+                        disabled={autosaveLoading}
+                      />
+                      {autosaveLoading && (
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -420,12 +424,12 @@ export function StoreDetail() {
                       {storeDetails.createdAt ? new Date(storeDetails.createdAt).toLocaleString() : 'Unknown'}
                     </p>
                   </div>
-                  <div>
+                  {/* <div>
                     <Label>Last Updated</Label>
                     <p className="text-sm text-muted-foreground mt-1">
                       {storeDetails.updatedAt ? new Date(storeDetails.updatedAt).toLocaleString() : 'Unknown'}
                     </p>
-                  </div>
+                  </div> */}
                 </CardContent>
               </Card>
             </div>

@@ -13,23 +13,23 @@ import { AccessManagement } from './components/pages/AccessManagement';
 import { Logs } from './components/pages/Logs';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 
-// function ProtectedRoute({ children }: { children: React.ReactNode }) {
-//   const { user, loading } = useAuth();
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
 
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen bg-background flex items-center justify-center">
-//         <LoadingSpinner className="w-8 h-8" />
-//       </div>
-//     );
-//   }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner className="w-8 h-8" />
+      </div>
+    );
+  }
 
-//   if (!user) {
-//     return <Navigate to="/" replace />;
-//   }
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
-//   return <>{children}</>;
-// }
+  return <>{children}</>;
+}
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
@@ -62,9 +62,9 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          // <ProtectedRoute>
-          <DashboardLayout />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
         }
       >
         <Route index element={<Navigate to="/dashboard/stores" replace />} />

@@ -1,3 +1,7 @@
+export interface StoreKV {
+  autosave?: boolean;
+  [key: string]: string | number | boolean | undefined;
+}
 export interface User {
   id: string;
   email: string;
@@ -10,8 +14,8 @@ export interface Store {
   name: string;
   description: string;
   createdAt: string;
-  updatedAt: string;
-  autosave?: boolean;
+  updatedAt?: string;
+  store: StoreKV;
 }
 
 export interface StoreData {

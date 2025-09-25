@@ -76,8 +76,10 @@ public class StoreController {
         Set<Store> stores = userOpt.get().getStores();
         List<Map<String, Object>> storeList = stores.stream().map(store -> Map.of(
             "token", (Object) store.getToken(),
-            "name", (Object) store.getName(),
-            "description", (Object) store.getDescription()
+            "name", store.getName(),
+            "description", store.getDescription(),
+            "createdAt", store.getCreatedAt()
+            // "updatedAt", store.getUpdatedAt()
         )).collect(Collectors.toList());
         return ResponseEntity.ok(new ApiResponse("success", "Stores fetched", storeList));
     }
@@ -114,6 +116,7 @@ public class StoreController {
                 Map<String, Object> storeData = mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
                 // Transform the 'store' key if present
                 if (storeData.containsKey("store") && storeData.get("store") instanceof Map) {
+                    @SuppressWarnings("unchecked")
                     Map<String, Object> origStore = (Map<String, Object>) storeData.get("store");
                     Map<String, Object> newStore = new HashMap<>();
                     for (Map.Entry<String, Object> entry : origStore.entrySet()) {
@@ -133,6 +136,8 @@ public class StoreController {
                 response.put("token", store.getToken());
                 response.put("name", store.getName());
                 response.put("description", store.getDescription());
+                response.put("createdAt", store.getCreatedAt());
+                // response.put("updatedAt", store.getUpdatedAt());
                 response.putAll(storeData); // This will add the 'store' key as in the TCP response
                 return ResponseEntity.ok(new ApiResponse("success", "Store fetched", response));
             } else if (json != null && json.startsWith("ERROR")) {
@@ -207,7 +212,13 @@ public class StoreController {
             storeRepository.save(store);
             return ResponseEntity.ok(new ApiResponse("success", "Store updated"));
         } else {
-            return ResponseEntity.badRequest().body(new ApiResponse("error", "No valid fields to update"));
+            return ResponseEntity.ok(new ApiResponse("success", "Store updated", Map.of(
+                "token", store.getToken(),
+                "name", store.getName(),
+                "description", store.getDescription(),
+                "createdAt", store.getCreatedAt()
+                // "updatedAt", store.getUpdatedAt()
+            )));
         }
     }
 

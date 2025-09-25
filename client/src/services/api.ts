@@ -18,7 +18,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
     return response.json();
@@ -46,11 +46,15 @@ class ApiService {
   }
 
   async getStores(): Promise<{ status: string; message: string; data: Store[] }> {
-    return this.request<{ status: string; message: string; data: Store[] }>('/store');
+    const result = await this.request<{ status: string; message: string; data: Store[] }>('/store');
+    // console.log('Fetched stores:', result.data);
+    return result;
   }
 
-  async getStore(token: string): Promise<{ status: string; message: string; data: { token: string; name: string; description: string; store: Record<string, string | number | boolean | object | null>; createdAt?: string; updatedAt?: string } }> {
-    return this.request<{ status: string; message: string; data: { token: string; name: string; description: string; store: Record<string, string | number | boolean | object | null>; createdAt?: string; updatedAt?: string } }>(`/store/${token}`);
+  async getStore(token: string): Promise<{ status: string; message: string; data: Store }> {
+    const result = await this.request<{ status: string; message: string; data: Store }>(`/store/${token}`);
+    // console.log('Fetched store:', result.data);
+    return result;
   }
 
   async updateStore(token: string, name: string, description: string): Promise<Store> {
