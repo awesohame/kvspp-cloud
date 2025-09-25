@@ -57,9 +57,9 @@
 
 .text-glow {
   position: relative;
-  background: linear-gradient(270deg, #3b82f6, #8b5cf6, #22d3ee);
+  background: linear-gradient(270deg, #3b82f6, #0091CB, #22d3ee);
   background-size: 600% 600%;
-  animation: gradient 8s ease infinite;
+  animation: gradient 3s ease infinite;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -74,7 +74,7 @@
   height: 100%;
   background: linear-gradient(270deg, #3b82f6, #8b5cf6, #22d3ee);
   background-size: 600% 600%;
-  animation: gradient 8s ease infinite;
+  animation: gradient 3s ease infinite;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -95,7 +95,7 @@
     rgba(34, 197, 94, 0.8) 60%, 
     rgba(59, 130, 246, 0.8) 100%);
   background-size: 300% 300%;
-  animation: gradient-glow 4s ease infinite;
+  animation: gradient-glow 1.5s ease infinite;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -112,4 +112,29 @@
     background-position: 100% 50%; 
     filter: blur(12px) brightness(3);
   }
+}
+
+/* Custom Scrollbar Styles */
+
+/* Subtle, dark scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 8px;
+  border: 2px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--secondary));
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+html {
+  scrollbar-color: hsl(var(--muted)) transparent;
+  scrollbar-width: thin;
 }

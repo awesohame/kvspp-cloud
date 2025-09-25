@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Database,
@@ -30,7 +30,7 @@ export function Sidebar() {
     <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Logo */}
       <div className="p-6 border-b border-border">
-        <div className="flex items-center space-x-3">
+        <Link to="/" className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Database className="w-5 h-5 text-primary-foreground" />
           </div>
@@ -38,7 +38,7 @@ export function Sidebar() {
             <h1 className="text-xl font-bold text-foreground">KVS++</h1>
             <p className="text-xs text-muted-foreground">Cloud</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}

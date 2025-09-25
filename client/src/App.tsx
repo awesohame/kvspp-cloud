@@ -87,7 +87,7 @@ function App() {
     <AuthProvider>
       <StoreProvider>
         <Router>
-          <div className="min-h-screen bg-background text-foreground">
+          <div className="min-h-screen text-foreground">
             <AppRoutes />
           </div>
         </Router>

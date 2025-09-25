@@ -10,8 +10,10 @@ import {
   Upload,
   Key,
   Database,
-  Copy
+  Copy,
+  Check
 } from 'lucide-react';
+
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
@@ -28,6 +30,9 @@ import type { Store } from '@/types/api';
 // import { LoadingSpinner } from '../ui/loading-spinner';
 
 export function StoreDetail() {
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [loadLoading, setLoadLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { token } = useParams<{ token: string }>();
   const { updateStore } = useStore();
   const navigate = useNavigate();
@@ -129,22 +134,26 @@ export function StoreDetail() {
 
   const handleSaveStore = async () => {
     if (!token) return;
-
+    setSaveLoading(true);
     try {
       await apiService.saveStore(token);
     } catch (error: unknown) {
       console.error('Failed to save store:', error);
+    } finally {
+      setSaveLoading(false);
     }
   };
 
   const handleLoadStore = async () => {
     if (!token) return;
-
+    setLoadLoading(true);
     try {
       await apiService.loadStore(token);
       // Refresh data after load
     } catch (error: unknown) {
       console.error('Failed to load store:', error);
+    } finally {
+      setLoadLoading(false);
     }
   };
 
@@ -187,58 +196,57 @@ export function StoreDetail() {
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Stores
-            </Button>
+        <div className="mb-8">
+          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Stores
+          </Button>
+          <div className="mt-6 flex flex-col gap-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">{storeDetails.name}</h1>
-              <p className="text-muted-foreground">{storeDetails.description}</p>
+              <p className="text-muted-foreground whitespace-pre-line">{storeDetails.description}</p>
             </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Dialog open={isEditStoreOpen} onOpenChange={setIsEditStoreOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Store
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Store</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="edit-name">Store Name</Label>
-                    <Input
-                      id="edit-name"
-                      value={editingStore.name}
-                      onChange={(e) => setEditingStore(prev => ({ ...prev, name: e.target.value }))}
-                    />
+            <div className="mt-2">
+              <Dialog open={isEditStoreOpen} onOpenChange={setIsEditStoreOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Store
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Store</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-name">Store Name</Label>
+                      <Input
+                        id="edit-name"
+                        value={editingStore.name}
+                        onChange={(e) => setEditingStore(prev => ({ ...prev, name: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-description">Description</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editingStore.description}
+                        onChange={(e) => setEditingStore(prev => ({ ...prev, description: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsEditStoreOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleUpdateStore}>
+                        Update Store
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="edit-description">Description</Label>
-                    <Textarea
-                      id="edit-description"
-                      value={editingStore.description}
-                      onChange={(e) => setEditingStore(prev => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsEditStoreOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleUpdateStore}>
-                      Update Store
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
 
@@ -384,12 +392,30 @@ export function StoreDetail() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex space-x-2">
-                    <Button variant="outline" onClick={handleSaveStore} className="flex-1">
-                      <Save className="w-4 h-4 mr-2" />
+                    <Button
+                      variant="outline"
+                      onClick={handleSaveStore}
+                      className="flex-1"
+                      disabled={saveLoading}
+                    >
+                      {saveLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
                       Save to File
                     </Button>
-                    <Button variant="outline" onClick={handleLoadStore} className="flex-1">
-                      <Upload className="w-4 h-4 mr-2" />
+                    <Button
+                      variant="outline"
+                      onClick={handleLoadStore}
+                      className="flex-1"
+                      disabled={loadLoading}
+                    >
+                      {loadLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
                       Load from File
                     </Button>
                   </div>
@@ -412,9 +438,14 @@ export function StoreDetail() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => navigator.clipboard.writeText(storeDetails.token)}
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(storeDetails.token);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 1200);
+                        }}
+                        aria-label={copied ? 'Copied!' : 'Copy token'}
                       >
-                        <Copy className="w-4 h-4" />
+                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
