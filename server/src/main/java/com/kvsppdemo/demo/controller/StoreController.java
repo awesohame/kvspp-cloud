@@ -99,11 +99,50 @@ public class StoreController {
         if (!store.getOwners().contains(userOpt.get())) {
             return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
         }
-        return ResponseEntity.ok(new ApiResponse("success", "Store fetched", Map.of(
-            "token", store.getToken(),
-            "name", store.getName(),
-            "description", store.getDescription()
-        )));
+        try {
+            // First, load the store
+            String loadResult = kvsppTcpClientService.sendCommand(token, "LOAD " + token);
+            // if (!"OK".equals(loadResult)) {
+            //    return ResponseEntity.status(500).body(new ApiResponse("error", "Failed to load store: " + loadResult));
+            // }
+            // Select the store and get JSON
+            String json = kvsppTcpClientService.sendCommand(token, "JSON");
+            // System.out.println("Raw TCP JSON response: [" + json + "]");
+            if (json != null && json.trim().startsWith("{")) {
+                // Parse JSON string to Map using TypeReference for type safety
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                Map<String, Object> storeData = mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                // Transform the 'store' key if present
+                if (storeData.containsKey("store") && storeData.get("store") instanceof Map) {
+                    Map<String, Object> origStore = (Map<String, Object>) storeData.get("store");
+                    Map<String, Object> newStore = new HashMap<>();
+                    for (Map.Entry<String, Object> entry : origStore.entrySet()) {
+                        String k = entry.getKey();
+                        Object v = entry.getValue();
+                        if ("autosave".equals(k)) {
+                            newStore.put(k, v);
+                        } else if (v instanceof Map && ((Map<?, ?>) v).containsKey("value")) {
+                            newStore.put(k, ((Map<?, ?>) v).get("value"));
+                        } else {
+                            newStore.put(k, v);
+                        }
+                    }
+                    storeData.put("store", newStore);
+                }
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", store.getToken());
+                response.put("name", store.getName());
+                response.put("description", store.getDescription());
+                response.putAll(storeData); // This will add the 'store' key as in the TCP response
+                return ResponseEntity.ok(new ApiResponse("success", "Store fetched", response));
+            } else if (json != null && json.startsWith("ERROR")) {
+                return ResponseEntity.status(400).body(new ApiResponse("error", json));
+            } else {
+                return ResponseEntity.status(500).body(new ApiResponse("error", "Unexpected response: " + json));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("error", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{token}")
@@ -211,7 +250,7 @@ public class StoreController {
     // --- KVS++ TCP Endpoints ---
 
     @GetMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @PathVariable String key) {
+    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @PathVariable("key") String key) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
         try {
@@ -232,7 +271,7 @@ public class StoreController {
     }
 
     @PutMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @PathVariable String key, @RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @PathVariable("key") String key, @RequestBody Map<String, String> body) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
         String value = body.get("value");
@@ -252,7 +291,7 @@ public class StoreController {
     }
 
     @DeleteMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @PathVariable String key) {
+    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @PathVariable("key") String key) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
         try {
@@ -270,7 +309,7 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/save")
-    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token) {
+    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
         String filename = token;
@@ -290,7 +329,7 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/load")
-    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token) {
+    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
         String filename = token;
@@ -310,7 +349,7 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/autosave")
-    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal, @PathVariable String token, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @RequestBody Map<String, Object> body) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
         if (access != null) return access;
         Object autosaveObj = body.get("autosave");

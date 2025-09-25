@@ -9,7 +9,8 @@ import {
   Save,
   Upload,
   Key,
-  Database
+  Database,
+  Copy
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
@@ -26,9 +27,9 @@ import { apiService } from '../../services/api';
 
 export function StoreDetail() {
   const { token } = useParams<{ token: string }>();
-  const { currentStore, updateStore } = useStore();
+  const { updateStore } = useStore();
   const navigate = useNavigate();
-  ;
+  const [storeDetails, setStoreDetails] = useState<{ token: string; name: string; description: string; store: Record<string, string | number | boolean | object | null>; createdAt?: string; updatedAt?: string } | null>(null);
   const [storeData, setStoreData] = useState<Record<string, string | number | boolean | object | null>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddKeyOpen, setIsAddKeyOpen] = useState(false);
@@ -36,21 +37,40 @@ export function StoreDetail() {
   const [newKey, setNewKey] = useState({ key: '', value: '' });
   const [editingStore, setEditingStore] = useState({ name: '', description: '' });
   const [autosave, setAutosave] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentStore) {
-      setEditingStore({
-        name: currentStore.name,
-        description: currentStore.description
-      });
-      setAutosave(currentStore.autosave || false);
-    }
-  }, [currentStore]);
+    const fetchStoreDetails = async () => {
+      if (!token) return;
 
-  const filteredKeys = Object.keys(storeData).filter(key =>
-    key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    JSON.stringify(storeData[key]).toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      try {
+        setLoading(true);
+        const response = await apiService.getStore(token);
+        console.log(response.data)
+        setStoreDetails(response.data);
+        setStoreData(response.data.store || {});
+        setEditingStore({
+          name: response.data.name,
+          description: response.data.description
+        });
+        setAutosave(typeof response.data.store?.autosave === 'boolean' ? response.data.store.autosave : false);
+      } catch (error: unknown) {
+        console.error('Failed to fetch store details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStoreDetails();
+  }, [token]);
+
+  const filteredKeys = Object.keys(storeData).filter(key => {
+    if (key === 'autosave') return false; // Don't show autosave as a key-value pair
+    return (
+      key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      JSON.stringify(storeData[key]).toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   const handleAddKey = async () => {
     if (!token || !newKey.key.trim()) return;
@@ -130,7 +150,24 @@ export function StoreDetail() {
     }
   };
 
-  if (!currentStore) {
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center space-x-4 mb-6">
+          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Stores
+          </Button>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading store details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!storeDetails) {
     return (
       <div className="p-6">
         <div className="flex items-center space-x-4 mb-6">
@@ -159,8 +196,8 @@ export function StoreDetail() {
               Back to Stores
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{currentStore.name}</h1>
-              <p className="text-muted-foreground">{currentStore.description}</p>
+              <h1 className="text-3xl font-bold text-foreground">{storeDetails.name}</h1>
+              <p className="text-muted-foreground">{storeDetails.description}</p>
             </div>
           </div>
 
@@ -367,26 +404,26 @@ export function StoreDetail() {
                   <div>
                     <Label>Store Token</Label>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Input value={currentStore.token} readOnly className="font-mono text-xs" />
+                      <Input value={storeDetails.token} readOnly className="font-mono text-xs" />
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => navigator.clipboard.writeText(currentStore.token)}
+                        variant="ghost"
+                        onClick={() => navigator.clipboard.writeText(storeDetails.token)}
                       >
-                        Copy
+                        <Copy className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                   <div>
                     <Label>Created</Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {new Date(currentStore.createdAt).toLocaleString()}
+                      {storeDetails.createdAt ? new Date(storeDetails.createdAt).toLocaleString() : 'Unknown'}
                     </p>
                   </div>
                   <div>
                     <Label>Last Updated</Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {new Date(currentStore.updatedAt).toLocaleString()}
+                      {storeDetails.updatedAt ? new Date(storeDetails.updatedAt).toLocaleString() : 'Unknown'}
                     </p>
                   </div>
                 </CardContent>

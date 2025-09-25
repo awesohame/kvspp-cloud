@@ -209,7 +209,7 @@ export function AccountSettings() {
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
+                    <Button variant="destructive" size="sm" className='bg-red-700'>
                       Delete Account
                     </Button>
                   </AlertDialogTrigger>

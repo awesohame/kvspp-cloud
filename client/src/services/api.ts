@@ -49,8 +49,8 @@ class ApiService {
     return this.request<{ status: string; message: string; data: Store[] }>('/store');
   }
 
-  async getStore(token: string): Promise<Store> {
-    return this.request<Store>(`/store/${token}`);
+  async getStore(token: string): Promise<{ status: string; message: string; data: { token: string; name: string; description: string; store: Record<string, string | number | boolean | object | null>; createdAt?: string; updatedAt?: string } }> {
+    return this.request<{ status: string; message: string; data: { token: string; name: string; description: string; store: Record<string, string | number | boolean | object | null>; createdAt?: string; updatedAt?: string } }>(`/store/${token}`);
   }
 
   async updateStore(token: string, name: string, description: string): Promise<Store> {
