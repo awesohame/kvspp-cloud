@@ -212,7 +212,7 @@ export const LandingPage = () => {
         </section>
 
         {/* Features Detail */}
-        <section className="py-24 px-6 bg-card/30 bg-transparent">
+        <section className="py-24 px-6 bg-transparent">
           <div className="max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
@@ -229,7 +229,7 @@ export const LandingPage = () => {
                     'Thread-safe concurrent operations',
                     'Automatic horizontal scaling',
                     'Built-in data persistence',
-                    '99.99% uptime SLA'
+                    '99.99% uptime'
                   ].map((item) => (
                     <li key={item} className="flex items-center space-x-3">
                       <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
