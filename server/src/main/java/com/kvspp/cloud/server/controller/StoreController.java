@@ -1,10 +1,10 @@
-package com.kvsppdemo.demo.controller;
+package com.kvspp.cloud.server.controller;
 
-import com.kvsppdemo.demo.model.Store;
-import com.kvsppdemo.demo.model.User;
-import com.kvsppdemo.demo.repository.StoreRepository;
-import com.kvsppdemo.demo.repository.UserRepository;
-import com.kvsppdemo.demo.service.KvsppTcpClientService;
+import com.kvspp.cloud.server.model.Store;
+import com.kvspp.cloud.server.model.User;
+import com.kvspp.cloud.server.repository.StoreRepository;
+import com.kvspp.cloud.server.repository.UserRepository;
+import com.kvspp.cloud.server.service.KvsppTcpClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +24,8 @@ public class StoreController {
     private KvsppTcpClientService kvsppTcpClientService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse> createStore(@AuthenticationPrincipal OAuth2User principal, @RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse> createStore(@AuthenticationPrincipal OAuth2User principal,
+            @RequestBody Map<String, String> body) {
         if (principal == null) {
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
@@ -46,7 +47,8 @@ public class StoreController {
             token = UUID.randomUUID().toString();
             attempts++;
             if (attempts > 5) {
-                return ResponseEntity.status(500).body(new ApiResponse("error", "Failed to generate unique store token. Please try again."));
+                return ResponseEntity.status(500)
+                        .body(new ApiResponse("error", "Failed to generate unique store token. Please try again."));
             }
         } while (storeRepository.findByToken(token) != null);
         store.setToken(token);
@@ -57,10 +59,9 @@ public class StoreController {
         userOpt.get().getStores().add(store);
         userRepository.save(userOpt.get());
         return ResponseEntity.ok(new ApiResponse("success", "Store created", Map.of(
-            "token", store.getToken(),
-            "name", store.getName(),
-            "description", store.getDescription()
-        )));
+                "token", store.getToken(),
+                "name", store.getName(),
+                "description", store.getDescription())));
     }
 
     @GetMapping
@@ -75,17 +76,18 @@ public class StoreController {
         }
         Set<Store> stores = userOpt.get().getStores();
         List<Map<String, Object>> storeList = stores.stream().map(store -> Map.of(
-            "token", (Object) store.getToken(),
-            "name", store.getName(),
-            "description", store.getDescription(),
-            "createdAt", store.getCreatedAt()
-            // "updatedAt", store.getUpdatedAt()
+                "token", (Object) store.getToken(),
+                "name", store.getName(),
+                "description", store.getDescription(),
+                "createdAt", store.getCreatedAt()
+        // "updatedAt", store.getUpdatedAt()
         )).collect(Collectors.toList());
         return ResponseEntity.ok(new ApiResponse("success", "Stores fetched", storeList));
     }
 
     @GetMapping("/{token}")
-    public ResponseEntity<ApiResponse> getStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token) {
+    public ResponseEntity<ApiResponse> getStore(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token) {
         if (principal == null) {
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
@@ -103,9 +105,11 @@ public class StoreController {
         }
         try {
             // First, load the store
-            String loadResult = kvsppTcpClientService.sendCommand(token, "LOAD " + token);
+            // String loadResult = kvsppTcpClientService.sendCommand(token, "LOAD " +
+            // token);
             // if (!"OK".equals(loadResult)) {
-            //    return ResponseEntity.status(500).body(new ApiResponse("error", "Failed to load store: " + loadResult));
+            // return ResponseEntity.status(500).body(new ApiResponse("error", "Failed to
+            // load store: " + loadResult));
             // }
             // Select the store and get JSON
             String json = kvsppTcpClientService.sendCommand(token, "JSON");
@@ -113,7 +117,9 @@ public class StoreController {
             if (json != null && json.trim().startsWith("{")) {
                 // Parse JSON string to Map using TypeReference for type safety
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                Map<String, Object> storeData = mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                Map<String, Object> storeData = mapper.readValue(json,
+                        new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+                        });
                 // Transform the 'store' key if present
                 if (storeData.containsKey("store") && storeData.get("store") instanceof Map) {
                     @SuppressWarnings("unchecked")
@@ -151,7 +157,8 @@ public class StoreController {
     }
 
     @DeleteMapping("/{token}")
-    public ResponseEntity<ApiResponse> deleteStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token) {
+    public ResponseEntity<ApiResponse> deleteStore(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token) {
         if (principal == null) {
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
@@ -180,7 +187,8 @@ public class StoreController {
     }
 
     @PutMapping("/{token}")
-    public ResponseEntity<ApiResponse> updateStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse> updateStore(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token, @RequestBody Map<String, String> body) {
         if (principal == null) {
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
@@ -213,17 +221,18 @@ public class StoreController {
             return ResponseEntity.ok(new ApiResponse("success", "Store updated"));
         } else {
             return ResponseEntity.ok(new ApiResponse("success", "Store updated", Map.of(
-                "token", store.getToken(),
-                "name", store.getName(),
-                "description", store.getDescription(),
-                "createdAt", store.getCreatedAt()
-                // "updatedAt", store.getUpdatedAt()
+                    "token", store.getToken(),
+                    "name", store.getName(),
+                    "description", store.getDescription(),
+                    "createdAt", store.getCreatedAt()
+            // "updatedAt", store.getUpdatedAt()
             )));
         }
     }
 
     @PostMapping("/{token}/owners")
-    public ResponseEntity<ApiResponse> addOwnerToStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse> addOwnerToStore(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token, @RequestBody Map<String, String> body) {
         if (principal == null) {
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
@@ -261,9 +270,11 @@ public class StoreController {
     // --- KVS++ TCP Endpoints ---
 
     @GetMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @PathVariable("key") String key) {
+    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token, @PathVariable("key") String key) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null) return access;
+        if (access != null)
+            return access;
         try {
             String output = kvsppTcpClientService.sendCommand(token, "GET " + key);
             if (output != null && output.startsWith("VALUE ")) {
@@ -282,11 +293,15 @@ public class StoreController {
     }
 
     @PutMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @PathVariable("key") String key, @RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token, @PathVariable("key") String key,
+            @RequestBody Map<String, String> body) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null) return access;
+        if (access != null)
+            return access;
         String value = body.get("value");
-        if (value == null) return ResponseEntity.badRequest().body(new ApiResponse("error", "Missing value"));
+        if (value == null)
+            return ResponseEntity.badRequest().body(new ApiResponse("error", "Missing value"));
         try {
             String output = kvsppTcpClientService.sendCommand(token, "SET " + key + " " + value);
             if ("OK".equals(output)) {
@@ -302,9 +317,11 @@ public class StoreController {
     }
 
     @DeleteMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @PathVariable("key") String key) {
+    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token, @PathVariable("key") String key) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null) return access;
+        if (access != null)
+            return access;
         try {
             String output = kvsppTcpClientService.sendCommand(token, "DELETE " + key);
             if ("OK".equals(output)) {
@@ -320,9 +337,11 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/save")
-    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token) {
+    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null) return access;
+        if (access != null)
+            return access;
         String filename = token;
         try {
             String cmd = (filename != null && !filename.isBlank()) ? "SAVE " + filename : "SAVE";
@@ -340,9 +359,11 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/load")
-    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token) {
+    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null) return access;
+        if (access != null)
+            return access;
         String filename = token;
         try {
             String cmd = (filename != null && !filename.isBlank()) ? "LOAD " + filename : "LOAD";
@@ -360,21 +381,28 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/autosave")
-    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal, @PathVariable("token") String token, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("token") String token, @RequestBody Map<String, Object> body) {
         ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null) return access;
+        if (access != null)
+            return access;
         Object autosaveObj = body.get("autosave");
         if (autosaveObj == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse("error", "Missing 'autosave' field (true/false or 'on'/'off')"));
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse("error", "Missing 'autosave' field (true/false or 'on'/'off')"));
         }
         String value;
         if (autosaveObj instanceof Boolean) {
             value = ((Boolean) autosaveObj) ? "ON" : "OFF";
         } else {
             String str = autosaveObj.toString().trim().toUpperCase();
-            if (str.equals("ON") || str.equals("TRUE")) value = "ON";
-            else if (str.equals("OFF") || str.equals("FALSE")) value = "OFF";
-            else return ResponseEntity.badRequest().body(new ApiResponse("error", "Invalid value for 'autosave'. Use true/false or 'on'/'off'"));
+            if (str.equals("ON") || str.equals("TRUE"))
+                value = "ON";
+            else if (str.equals("OFF") || str.equals("FALSE"))
+                value = "OFF";
+            else
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse("error", "Invalid value for 'autosave'. Use true/false or 'on'/'off'"));
         }
         try {
             String output = kvsppTcpClientService.sendCommand(token, "AUTOSAVE " + value);
@@ -390,10 +418,12 @@ public class StoreController {
         }
     }
 
-    // No direct help command in TCP protocol, so this can be omitted or return static info
+    // No direct help command in TCP protocol, so this can be omitted or return
+    // static info
     @GetMapping("/help")
     public ResponseEntity<ApiResponse> help() {
-        return ResponseEntity.ok(new ApiResponse("success", "Help output", Map.of("output", "See documentation for available commands.")));
+        return ResponseEntity.ok(new ApiResponse("success", "Help output",
+                Map.of("output", "See documentation for available commands.")));
     }
 
     // Helper to check access and return error if not allowed

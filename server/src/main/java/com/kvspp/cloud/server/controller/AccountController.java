@@ -1,7 +1,7 @@
-package com.kvsppdemo.demo.controller;
+package com.kvspp.cloud.server.controller;
 
-import com.kvsppdemo.demo.model.User;
-import com.kvsppdemo.demo.repository.UserRepository;
+import com.kvspp.cloud.server.model.User;
+import com.kvspp.cloud.server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;

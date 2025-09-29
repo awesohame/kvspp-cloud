@@ -1,4 +1,4 @@
-package com.kvsppdemo.demo.controller;
+package com.kvspp.cloud.server.controller;
 
 public class ApiResponse {
     private String status;

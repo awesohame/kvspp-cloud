@@ -1,7 +1,7 @@
-package com.kvsppdemo.demo.websocket;
+package com.kvspp.cloud.server.websocket;
 
-import com.kvsppdemo.demo.service.TcpProxyService;
-import com.kvsppdemo.demo.service.TcpProxyService.TcpSession;
+import com.kvspp.cloud.server.service.TcpProxyService;
+import com.kvspp.cloud.server.service.TcpProxyService.TcpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;

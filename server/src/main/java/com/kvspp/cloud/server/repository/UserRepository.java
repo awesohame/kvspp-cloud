@@ -1,6 +1,6 @@
-package com.kvsppdemo.demo.repository;
+package com.kvspp.cloud.server.repository;
 
-import com.kvsppdemo.demo.model.User;
+import com.kvspp.cloud.server.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package com.kvsppdemo.demo.service;
+package com.kvspp.cloud.server.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

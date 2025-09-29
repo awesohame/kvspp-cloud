@@ -1,10 +1,10 @@
-package com.kvsppdemo.demo;
+package com.kvspp.cloud.server;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DemoApplicationTests {
+class KvsppCloudServerApplicationTests {
 
 	@Test
 	void contextLoads() {

@@ -1,4 +1,4 @@
-package com.kvsppdemo.demo.model;
+package com.kvspp.cloud.server.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
