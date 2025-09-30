@@ -22,7 +22,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        System.out.println("UserService: loadUser called");
+        // System.out.println("UserService: loadUser called");
         OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -32,7 +32,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         String name = (String) attributes.get("name");
         String picture = (String) attributes.get("picture");
 
-        System.out.println("UserService: googleId=" + googleId + ", email=" + email + ", name=" + name);
+        // System.out.println("UserService: googleId=" + googleId + ", email=" + email + ", name=" + name);
 
         Optional<User> userOpt = userRepository.findByGoogleId(googleId);
         User user = userOpt.orElseGet(User::new);
@@ -40,7 +40,7 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         user.setEmail(email);
         user.setName(name);
         user.setProfilePicture(picture);
-        System.out.println("UserService: Saving user " + user.getEmail());
+        // System.out.println("UserService: Saving user " + user.getEmail());
         userRepository.save(user);
 
         return new DefaultOAuth2User(
@@ -55,15 +55,15 @@ public class UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2U
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
         String picture = (String) attributes.get("picture");
-        System.out.println("UserService: persistUserFromAttributes called");
-        System.out.println("UserService: googleId=" + googleId + ", email=" + email + ", name=" + name);
+        // System.out.println("UserService: persistUserFromAttributes called");
+        // System.out.println("UserService: googleId=" + googleId + ", email=" + email + ", name=" + name);
         Optional<User> userOpt = userRepository.findByGoogleId(googleId);
         User user = userOpt.orElseGet(User::new);
         user.setGoogleId(googleId);
         user.setEmail(email);
         user.setName(name);
         user.setProfilePicture(picture);
-        System.out.println("UserService: Saving user " + user.getEmail());
+        // System.out.println("UserService: Saving user " + user.getEmail());
         userRepository.save(user);
     }
 }

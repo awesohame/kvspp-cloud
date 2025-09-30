@@ -49,4 +49,19 @@ public class User {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Set<Store> getStores() { return stores; }
     public void setStores(Set<Store> stores) { this.stores = stores; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        // Prefer id if set, else googleId
+        if (id != null && user.id != null) return id.equals(user.id);
+        return googleId != null && googleId.equals(user.googleId);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : (googleId != null ? googleId.hashCode() : 0);
+    }
 }

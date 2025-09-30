@@ -5,9 +5,13 @@ import com.kvspp.cloud.server.model.User;
 import com.kvspp.cloud.server.repository.StoreRepository;
 import com.kvspp.cloud.server.repository.UserRepository;
 import com.kvspp.cloud.server.service.KvsppTcpClientService;
+import com.kvspp.cloud.server.service.StoreAccessService;
+import com.kvspp.cloud.server.service.AccessResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -22,6 +26,8 @@ public class StoreController {
     private UserRepository userRepository;
     @Autowired
     private KvsppTcpClientService kvsppTcpClientService;
+    @Autowired
+    private StoreAccessService storeAccessService;
 
     @PostMapping
     public ResponseEntity<ApiResponse> createStore(@AuthenticationPrincipal OAuth2User principal,
@@ -272,9 +278,10 @@ public class StoreController {
     @GetMapping("/{token}/{key}")
     public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal,
             @PathVariable("token") String token, @PathVariable("key") String key) {
-        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null)
-            return access;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        if (!access.allowed)
+            return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         try {
             String output = kvsppTcpClientService.sendCommand(token, "GET " + key);
             if (output != null && output.startsWith("VALUE ")) {
@@ -296,9 +303,10 @@ public class StoreController {
     public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal,
             @PathVariable("token") String token, @PathVariable("key") String key,
             @RequestBody Map<String, String> body) {
-        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null)
-            return access;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        if (!access.allowed)
+            return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         String value = body.get("value");
         if (value == null)
             return ResponseEntity.badRequest().body(new ApiResponse("error", "Missing value"));
@@ -319,9 +327,10 @@ public class StoreController {
     @DeleteMapping("/{token}/{key}")
     public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal,
             @PathVariable("token") String token, @PathVariable("key") String key) {
-        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null)
-            return access;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        if (!access.allowed)
+            return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         try {
             String output = kvsppTcpClientService.sendCommand(token, "DELETE " + key);
             if ("OK".equals(output)) {
@@ -339,9 +348,10 @@ public class StoreController {
     @PostMapping("/{token}/save")
     public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal,
             @PathVariable("token") String token) {
-        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null)
-            return access;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        if (!access.allowed)
+            return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         String filename = token;
         try {
             String cmd = (filename != null && !filename.isBlank()) ? "SAVE " + filename : "SAVE";
@@ -361,9 +371,10 @@ public class StoreController {
     @PostMapping("/{token}/load")
     public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal,
             @PathVariable("token") String token) {
-        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null)
-            return access;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        if (!access.allowed)
+            return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         String filename = token;
         try {
             String cmd = (filename != null && !filename.isBlank()) ? "LOAD " + filename : "LOAD";
@@ -383,9 +394,10 @@ public class StoreController {
     @PostMapping("/{token}/autosave")
     public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal,
             @PathVariable("token") String token, @RequestBody Map<String, Object> body) {
-        ResponseEntity<ApiResponse> access = checkAccess(principal, token);
-        if (access != null)
-            return access;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        if (!access.allowed)
+            return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         Object autosaveObj = body.get("autosave");
         if (autosaveObj == null) {
             return ResponseEntity.badRequest()
@@ -424,25 +436,5 @@ public class StoreController {
     public ResponseEntity<ApiResponse> help() {
         return ResponseEntity.ok(new ApiResponse("success", "Help output",
                 Map.of("output", "See documentation for available commands.")));
-    }
-
-    // Helper to check access and return error if not allowed
-    private ResponseEntity<ApiResponse> checkAccess(OAuth2User principal, String token) {
-        if (principal == null) {
-            return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
-        }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
-        Store store = storeRepository.findByToken(token);
-        if (store == null) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
-        }
-        if (!store.getOwners().contains(userOpt.get())) {
-            return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
-        }
-        return null;
     }
 }

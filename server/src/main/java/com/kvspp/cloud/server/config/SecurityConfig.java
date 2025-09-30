@@ -30,7 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
-                        .requestMatchers("/ws/tcp-proxy").permitAll()
+                        .requestMatchers("/ws/tcp-proxy").authenticated()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .defaultAuthenticationEntryPointFor(
