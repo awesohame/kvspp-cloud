@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/ws/tcp-proxy-demo").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers("/ws/tcp-proxy").authenticated()
                         .anyRequest().authenticated())

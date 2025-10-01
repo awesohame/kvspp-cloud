@@ -16,6 +16,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private TcpProxyWebSocketHandler tcpProxyWebSocketHandler;
 
+    @Autowired
+    private DemoTcpProxyWebSocketHandler demoTcpProxyWebSocketHandler;
+
     private static final Logger logger = LoggerFactory.getLogger(WebSocketConfig.class);
 
     @Override
@@ -23,6 +26,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
         logger.info("Registering WebSocket handler at /ws/tcp-proxy");
         registry.addHandler(tcpProxyWebSocketHandler, "/ws/tcp-proxy")
             .addInterceptors(new HttpSessionHandshakeInterceptor(), new AuthHandshakeInterceptor())
+            .setAllowedOrigins("http://localhost:5173");
+        logger.info("Registering Demo WebSocket handler at /ws/tcp-proxy-demo");
+        registry.addHandler(demoTcpProxyWebSocketHandler, "/ws/tcp-proxy-demo")
             .setAllowedOrigins("http://localhost:5173");
     }
 }
