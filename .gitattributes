@@ -1,2 +1,11 @@
 # Auto detect text files and perform LF normalization
-* text=auto
+* text=Auto
+
+client/src/components/ui/* linguist-vendored=true
+client/*.config.js linguist-documentation=true
+client/tsconfig*.json linguist-documentation=true
+client/package*.json linguist-documentation=true
+client/components.json linguist-documentation=true
+client/public/* linguist-data=true
+client/README.md linguist-documentation=true
+client/.env* linguist-documentation=true

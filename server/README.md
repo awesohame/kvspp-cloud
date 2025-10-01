@@ -1,71 +1,72 @@
-# kvspp-demo Spring Boot Server
+# KVS++ Cloud Server
 
-This project is a simple Spring Boot application with a test endpoint at `/ping`.
+This folder contains the backend server for KVS++ Cloud.
 
-## Prerequisites
-- **Java 21** (required for building and running locally)
-- **Gradle** (wrapper included, no need to install globally)
-- **Docker** (optional, for containerized runs)
+## Tech Stack
+- Java
+- Spring Boot
+- Gradle
 
----
+## Structure
+- `src/main/java/`: Application source code
+- `src/main/resources/`: Config and templates
+- `build.gradle`: Build configuration
+- `Dockerfile`: Containerization
 
-## Running Locally (Windows)
-
-1. **Build the project:**
+## Setup
+1. Install Java (21+)
+2. Build and run:
    ```sh
-   gradlew.bat build
+   ./gradlew build
+   ./gradlew bootRun
    ```
-
-2. **Run the server:**
-   ```sh
-   gradlew.bat bootRun
-   ```
-
-3. **Test the endpoint:**
-   ```sh
-   curl http://localhost:8080/ping
-   ```
-   You should see:
-   ```
-   kvspp
-   ```
-
----
-
-## Running with Docker (Windows)
-
-1. **Build the Docker image:**
-   ```sh
-   docker build -t kvspp-springboot:kvspp-server .
-   ```
-
-2. **Run the container:**
-   ```sh
-   docker run -p 8080:8080 kvspp-springboot:kvspp-server
-   ```
-
-3. **Test the endpoint:**
-   ```sh
-   curl http://localhost:8080/ping
-   ```
-
----
 
 ## Notes
-- Ensure you are using **Java 21** for local builds. If you have a newer Java version, set the `JAVA_HOME` to point to Java 21.
-- If you encounter version errors, check your Java version:
-  ```sh
-  java -version
-  ```
-- For Gradle sync issues in IDEs, ensure the correct Java version is configured in your IDE settings.
+- See the [root README](../README.md) for project-wide info.
 
----
+## API Reference
 
-## Project Structure
-- `src/main/java/com/kvsppdemo/demo/controller/PingController.java` — `/ping` endpoint
-- `src/main/java/com/kvsppdemo/demo/DemoApplication.java` — Main Spring Boot application
+### REST Endpoints
 
----
+**General**
+- `GET /ping`  -  Health check
 
-## License
-MIT
+**Account**
+- `GET /account/me`  -  Get current user info
+- `POST /account/logout`  -  Log out
+- `DELETE /account/delete`  -  Delete account
+
+_Remember to keep the KVS++ Docker container ([awesohame/kvspp-tcp](https://hub.docker.com/r/awesohame/kvspp-tcp)) or executable ([awesohame/kvsplusplus](https://github.com/awesohame/kvsplusplus)) running for the below commands. The default port is **5555**; set this port in `application.properties` as needed._
+
+**Store Management**  
+- `POST /store`  -  Create a new store (`name`, `description` in JSON body)
+- `GET /store`  -  List all stores
+- `GET /store/{storeToken}`  -  Get store details
+- `PUT /store/{storeToken}`  -  Update store (`name`, `description` in JSON body)
+- `DELETE /store/{storeToken}`  -  Delete store
+- `POST /store/{storeToken}/owners`  -  Add owner to store (`email` in JSON body)
+
+**Key-Value Operations**
+- `GET /store/{storeToken}/{key}`  -  Get value for key
+- `PUT /store/{storeToken}/{key}`  -  Set value for key (`value` in JSON body)
+- `DELETE /store/{storeToken}/{key}`  -  Delete key
+
+**Store Actions**
+- `POST /store/{storeToken}/save`  -  Save store to disk
+- `POST /store/{storeToken}/load`  -  Load store from disk
+- `POST /store/{storeToken}/autosave`  -  Set autosave (`autosave` in JSON body: true/false/on/off)
+- `GET /store/help`  -  Store API help
+
+### WebSocket
+
+**TCP Proxy WebSocket**
+- `ws://localhost:8080/ws/tcp-proxy?storeToken={storeToken}`
+   - Authenticate using the `JSESSIONID` cookie header
+   - Enables direct TCP-like communication with the selected store
+
+## WebSocket
+Single WebSocket endpoint for TCP proxying to KVS++:
+
+- `ws://localhost:8080/ws/tcp-proxy?storeToken={storeToken}`
+- Authenticate using the `JSESSIONID` cookie header
+- Allows direct TCP-like communication with the selected store
