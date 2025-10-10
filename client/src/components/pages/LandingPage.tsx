@@ -117,9 +117,11 @@ export const LandingPage = () => {
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}
-                <Button variant="outline" size="lg">
-                  View Documentation
-                </Button>
+                <Link to="/try-kvspp">
+                  <Button variant="outline" size="lg">
+                    Try KVS++ Now
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

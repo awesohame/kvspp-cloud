@@ -206,7 +206,10 @@ export function StoreDetail() {
               <h1 className="text-3xl font-bold text-foreground">{storeDetails.name}</h1>
               <p className="text-muted-foreground whitespace-pre-line">{storeDetails.description}</p>
             </div>
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button variant="default" onClick={() => navigate(`/dashboard/stores/${token}/interactive`)}>
+                Open in Interactive Mode
+              </Button>
               <Dialog open={isEditStoreOpen} onOpenChange={setIsEditStoreOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">

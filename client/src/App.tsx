@@ -12,6 +12,8 @@ import { ApiTokens } from './components/pages/ApiTokens';
 import { AccessManagement } from './components/pages/AccessManagement';
 import { Logs } from './components/pages/Logs';
 import { LoadingSpinner } from './components/ui/loading-spinner';
+import StoreInteractive from './components/pages/StoreInteractive';
+import TryKVSppDemo from './components/pages/TryKVSppDemo';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -57,6 +59,14 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route
+        path="/try-kvspp"
+        element={
+          <PublicRoute>
+            <TryKVSppDemo />
+          </PublicRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
@@ -70,6 +80,7 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard/stores" replace />} />
         <Route path="stores" element={<Stores />} />
         <Route path="stores/:token" element={<StoreDetail />} />
+        <Route path="stores/:token/interactive" element={<StoreInteractive />} />
         <Route path="account" element={<AccountSettings />} />
         <Route path="tokens" element={<ApiTokens />} />
         <Route path="access" element={<AccessManagement />} />
