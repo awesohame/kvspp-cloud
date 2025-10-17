@@ -11,7 +11,8 @@ import {
   Key,
   Database,
   Copy,
-  Check
+  Check,
+  PenLine
 } from 'lucide-react';
 
 import { Button } from '../ui/button';
@@ -159,16 +160,17 @@ export function StoreDetail() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center space-x-4 mb-6">
-          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
+          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')} size="sm" className="sm:size-default">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Stores
+            <span className="hidden sm:inline">Back to Stores</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </div>
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading store details...</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Loading store details...</p>
         </div>
       </div>
     );
@@ -176,48 +178,50 @@ export function StoreDetail() {
 
   if (!storeDetails) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center space-x-4 mb-6">
-          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
+          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')} size="sm" className="sm:size-default">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Stores
+            <span className="hidden sm:inline">Back to Stores</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </div>
-        <div className="text-center py-12">
+        <div className="text-center py-12 px-4">
           <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">Store not found</h3>
-          <p className="text-muted-foreground">The requested store could not be found.</p>
+          <h3 className="text-base sm:text-lg font-medium mb-2">Store not found</h3>
+          <p className="text-sm sm:text-base text-muted-foreground">The requested store could not be found.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
+        <div className="mb-6 sm:mb-8">
+          <Button variant="ghost" onClick={() => navigate('/dashboard/stores')} size="sm" className="sm:size-default mb-4 sm:mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Stores
+            <span className="hidden sm:inline">Back to Stores</span>
+            <span className="sm:hidden">Back</span>
           </Button>
-          <div className="mt-6 flex flex-col gap-2">
+          <div className="flex flex-col gap-3 sm:gap-2">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{storeDetails.name}</h1>
-              <p className="text-muted-foreground whitespace-pre-line">{storeDetails.description}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{storeDetails.name}</h1>
+              <p className="text-sm sm:text-base text-muted-foreground whitespace-pre-line mt-1">{storeDetails.description}</p>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button variant="default" onClick={() => navigate(`/dashboard/stores/${token}/interactive`)}>
+            <div className="mt-2 flex flex-col sm:flex-row flex-wrap gap-2">
+              <Button variant="default" onClick={() => navigate(`/dashboard/stores/${token}/interactive`)} className="w-full sm:w-auto">
                 Open in Interactive Mode
               </Button>
               <Dialog open={isEditStoreOpen} onOpenChange={setIsEditStoreOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Store
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Edit Store</DialogTitle>
                   </DialogHeader>
@@ -238,11 +242,11 @@ export function StoreDetail() {
                         onChange={(e) => setEditingStore(prev => ({ ...prev, description: e.target.value }))}
                       />
                     </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setIsEditStoreOpen(false)}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsEditStoreOpen(false)} className="w-full sm:w-auto">
                         Cancel
                       </Button>
-                      <Button onClick={handleUpdateStore}>
+                      <Button onClick={handleUpdateStore} className="w-full sm:w-auto">
                         Update Store
                       </Button>
                     </div>
@@ -253,16 +257,16 @@ export function StoreDetail() {
           </div>
         </div>
 
-        <Tabs defaultValue="data" className="space-y-6">
-          <TabsList>
+        <Tabs defaultValue="data" className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:inline-grid">
             <TabsTrigger value="data">Store Data</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="data" className="space-y-6">
+          <TabsContent value="data" className="space-y-4 sm:space-y-6">
             {/* Controls */}
-            <div className="flex items-center justify-between">
-              <div className="relative flex-1 max-w-sm">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="relative flex-1 max-w-full sm:max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search keys..."
@@ -274,12 +278,12 @@ export function StoreDetail() {
 
               <Dialog open={isAddKeyOpen} onOpenChange={setIsAddKeyOpen}>
                 <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Key
+                  <Button className="w-full sm:w-auto">
+                    <PenLine className="w-4 h-4 mr-2" />
+                    Update Key
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Add New Key</DialogTitle>
                   </DialogHeader>
@@ -303,11 +307,11 @@ export function StoreDetail() {
                         rows={4}
                       />
                     </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setIsAddKeyOpen(false)}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsAddKeyOpen(false)} className="w-full sm:w-auto">
                         Cancel
                       </Button>
-                      <Button onClick={handleAddKey}>
+                      <Button onClick={handleAddKey} className="w-full sm:w-auto">
                         Add Key
                       </Button>
                     </div>
@@ -318,14 +322,14 @@ export function StoreDetail() {
 
             {/* Data Grid */}
             {filteredKeys.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="text-center py-12 px-4">
                 <Key className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No keys found</h3>
-                <p className="text-muted-foreground mb-4">
+                <h3 className="text-base sm:text-lg font-medium mb-2">No keys found</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mb-4">
                   {searchQuery ? 'No keys match your search.' : 'Add your first key-value pair to get started.'}
                 </p>
                 {!searchQuery && (
-                  <Button onClick={() => setIsAddKeyOpen(true)}>
+                  <Button onClick={() => setIsAddKeyOpen(true)} className="w-full sm:w-auto">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Key
                   </Button>
@@ -336,20 +340,20 @@ export function StoreDetail() {
                 {filteredKeys.map((key) => (
                   <Card key={key}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                      <div className="flex items-center space-x-3">
-                        <Badge variant="outline">{key}</Badge>
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <Badge variant="outline" className="text-xs sm:text-sm break-all">{key}</Badge>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteKey(key)}
-                        className="text-red-500 hover:text-red-500"
+                        className="text-red-500 hover:text-red-500 flex-shrink-0"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </CardHeader>
                     <CardContent>
-                      <pre className="text-sm bg-muted p-3 rounded-md overflow-x-auto">
+                      <pre className="text-xs sm:text-sm bg-muted p-2 sm:p-3 rounded-md overflow-x-auto">
                         {JSON.stringify(storeDetails?.store?.[key], null, 2)}
                       </pre>
                     </CardContent>
@@ -359,22 +363,22 @@ export function StoreDetail() {
             )}
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
+          <TabsContent value="settings" className="space-y-4 sm:space-y-6">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
               {/* General Settings */}
               <Card>
                 <CardHeader>
-                  <CardTitle>General Settings</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">General Settings</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Autosave</Label>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="flex-1 mr-4">
+                      <Label className="text-sm sm:text-base">Autosave</Label>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Automatically save changes to persistent storage
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Switch
                         checked={autosave}
                         onCheckedChange={handleToggleAutosave}
@@ -391,10 +395,10 @@ export function StoreDetail() {
               {/* File Operations */}
               <Card>
                 <CardHeader>
-                  <CardTitle>File Operations</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">File Operations</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       onClick={handleSaveStore}
@@ -429,15 +433,15 @@ export function StoreDetail() {
               </Card>
 
               {/* Store Info */}
-              <Card>
+              <Card className="md:col-span-2">
                 <CardHeader>
-                  <CardTitle>Store Information</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Store Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label>Store Token</Label>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Input value={storeDetails.token} readOnly className="font-mono text-xs" />
+                    <Label className="text-sm sm:text-base">Store Token</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input value={storeDetails.token} readOnly className="font-mono text-xs flex-1 min-w-0" />
                       <Button
                         size="sm"
                         variant="ghost"
@@ -447,14 +451,15 @@ export function StoreDetail() {
                           setTimeout(() => setCopied(false), 1200);
                         }}
                         aria-label={copied ? 'Copied!' : 'Copy token'}
+                        className="flex-shrink-0"
                       >
                         {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
                   <div>
-                    <Label>Created</Label>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <Label className="text-sm sm:text-base">Created</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       {storeDetails.createdAt ? new Date(storeDetails.createdAt).toLocaleString() : 'Unknown'}
                     </p>
                   </div>

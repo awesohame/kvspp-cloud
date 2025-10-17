@@ -152,7 +152,7 @@ export function Logs() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Activity Logs</h1>
+            <h1 className="text-3xl font-bold text-foreground">Activity Logs {"(Work in Progess)"}</h1>
             <p className="text-muted-foreground">Monitor your account activity and API usage</p>
           </div>
 

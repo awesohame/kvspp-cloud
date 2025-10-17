@@ -66,30 +66,32 @@ export const LandingPage = () => {
       <div className="min-h-screen">
         <div className="relative">
           {/* Navigation */}
-          <nav className="relative z-10 px-6 py-4">
+          <nav className="relative z-10 px-4 sm:px-6 py-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center animate-glow overflow-hidden">
-                  <img src="/kvspp.png" alt="KVS++ Logo" className="w-12 h-12 object-contain" />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary rounded-xl sm:rounded-2xl flex items-center justify-center animate-glow overflow-hidden">
+                  <img src="/kvspp.png" alt="KVS++ Logo" className="w-8 h-8 sm:w-12 sm:h-12 object-contain" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-extrabold text-foreground leading-tight">KVS++</h1>
-                  <p className="text-md text-primary font-semibold">Cloud</p>
+                  <h1 className="text-xl sm:text-3xl font-extrabold text-foreground leading-tight">KVS++</h1>
+                  <p className="text-xs sm:text-md text-primary font-semibold">Cloud</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 {user ? (
                   <Link to="/dashboard">
-                    <Button>
-                      Go to Dashboard
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                    <Button size="sm" className="sm:size-default">
+                      <span className="hidden sm:inline">Go to Dashboard</span>
+                      <span className="sm:hidden">Dashboard</span>
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                     </Button>
                   </Link>
                 ) : (
-                  <Button onClick={login} className="group">
-                    Get Started
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <Button onClick={login} size="sm" className="group sm:size-default">
+                    <span className="hidden sm:inline">Get Started</span>
+                    <span className="sm:hidden">Start</span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}
               </div>
@@ -97,28 +99,28 @@ export const LandingPage = () => {
           </nav>
 
           {/* Hero Content */}
-          <div className="relative z-10 px-6 py-20">
+          <div className="relative z-10 px-4 sm:px-6 py-12 sm:py-20">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
+              <h2 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 animate-fade-in">
                 <span className="text-glow">
                   Lightning Fast
                 </span>
                 <br />
                 Key-Value Storage
               </h2>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up z-10">
+              <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto animate-slide-up z-10 px-2">
                 Experience the power of C++ performance in the cloud. KVS++ delivers
                 enterprise-grade, thread-safe, in-memory key-value storage as a service.
               </p>
-              <div className="flex items-center justify-center space-x-4 animate-slide-up">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-slide-up px-4">
                 {!user && (
-                  <Button size="lg" onClick={login} className="group">
+                  <Button size="lg" onClick={login} className="group w-full sm:w-auto">
                     Start Building Now
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}
-                <Link to="/try-kvspp">
-                  <Button variant="outline" size="lg">
+                <Link to="/try-kvspp" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto">
                     Try KVS++ Now
                   </Button>
                 </Link>
@@ -127,15 +129,15 @@ export const LandingPage = () => {
           </div>
 
           {/* Stats */}
-          <div className="relative z-10 px-6 pb-20">
+          <div className="relative z-10 px-4 sm:px-6 pb-12 sm:pb-20">
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
                 {stats.map((stat) => (
                   <div key={stat.label} className="text-center animate-fade-in">
-                    <div className="text-3xl font-bold text-primary mb-2">
+                    <div className="text-2xl sm:text-3xl font-bold text-primary mb-1 sm:mb-2">
                       {stat.value}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       {stat.label}
                     </div>
                   </div>
@@ -146,9 +148,10 @@ export const LandingPage = () => {
         </div>
 
         {/* Docker Self-Host Section */}
-        <section className="py-16 px-6">
+        <section className="py-12 sm:py-16 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h4 className="text-2xl font-bold mb-2">Self-Host Instantly with&nbsp;
+            <h4 className="text-lg sm:text-2xl font-bold mb-2 px-2">
+              <span className="block sm:inline">Self-Host Instantly with&nbsp;</span>
               <a
                 href="https://hub.docker.com/r/awesohame/kvspp-tcp"
                 target="_blank"
@@ -156,16 +159,16 @@ export const LandingPage = () => {
                 className="text-blue-500 hover:underline inline-flex items-center justify-center gap-1"
               >
                 Docker Image
-                <ExternalLink className="w-6 h-6 inline-block" />
+                <ExternalLink className="w-4 h-4 sm:w-6 sm:h-6 inline-block" />
               </a>
             </h4>
             <div className="flex flex-col items-center gap-2 mb-4">
-              <div className="w-full max-w-md bg-muted rounded-lg p-3 flex items-center justify-between text-left">
-                <code className="text-sm select-all px-4">docker pull awesohame/kvspp-tcp:latest</code>
+              <div className="w-full max-w-md bg-muted rounded-lg p-2 sm:p-3 flex items-center justify-between text-left overflow-hidden">
+                <code className="text-xs sm:text-sm select-all px-2 sm:px-4 overflow-x-auto flex-1 min-w-0">docker pull awesohame/kvspp-tcp:latest</code>
                 <Button
                   size="sm"
                   variant={dockerCopied ? "ghost" : "outline"}
-                  className="ml-2"
+                  className="ml-2 flex-shrink-0"
                   aria-label={dockerCopied ? 'Copied!' : 'Copy docker pull command'}
                   onClick={async () => {
                     await navigator.clipboard.writeText('docker pull awesohame/kvspp-tcp:latest');
@@ -177,31 +180,31 @@ export const LandingPage = () => {
                 </Button>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">Perfect for local development, testing, or private deployments.</p>
+            <p className="text-xs text-muted-foreground px-4">Perfect for local development, testing, or private deployments.</p>
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-24 px-6">
+        <section className="py-12 sm:py-24 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h3 className="text-3xl font-bold mb-4">Why Choose KVS++?</h3>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <div className="text-center mb-8 sm:mb-16 px-2">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Why Choose KVS++?</h3>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 Built from the ground up with performance, reliability, and developer
                 experience in mind.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
               {features.map((feature) => {
                 const Icon = feature.icon;
                 return (
                   <Card key={feature.title} className="glass-effect border-border/50 hover:border-primary/20 transition-colors">
-                    <CardContent className="p-6">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                        <Icon className="w-6 h-6 text-primary" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                       </div>
-                      <h4 className="text-lg font-semibold mb-2">{feature.title}</h4>
+                      <h4 className="text-base sm:text-lg font-semibold mb-2">{feature.title}</h4>
                       <p className="text-muted-foreground text-sm leading-relaxed">
                         {feature.description}
                       </p>
@@ -214,18 +217,18 @@ export const LandingPage = () => {
         </section>
 
         {/* Features Detail */}
-        <section className="py-24 px-6 bg-transparent">
+        <section className="py-12 sm:py-24 px-4 sm:px-6 bg-transparent">
           <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h3 className="text-3xl font-bold mb-6">
+            <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+              <div className="px-2">
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
                   Enterprise-Grade Performance
                 </h3>
-                <p className="text-lg text-muted-foreground mb-8">
+                <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8">
                   KVS++ leverages modern C++ optimization techniques and in-memory
                   architecture to deliver unmatched performance for your applications.
                 </p>
-                <ul className="space-y-4">
+                <ul className="space-y-3 sm:space-y-4">
                   {[
                     'Sub-millisecond response times',
                     'Thread-safe concurrent operations',
@@ -234,15 +237,15 @@ export const LandingPage = () => {
                     '99.99% uptime'
                   ].map((item) => (
                     <li key={item} className="flex items-center space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      <span className="text-muted-foreground">{item}</span>
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+                      <span className="text-sm sm:text-base text-muted-foreground">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="lg:pl-8">
+              <div className="lg:pl-8 order-first lg:order-last">
                 <Card className="glass-effect">
-                  <CardContent className="p-0">
+                  <CardContent className="p-0 overflow-x-auto">
                     <CodeBlock
                       text={`# Select your store
   SELECT your-store-token
@@ -266,7 +269,7 @@ export const LandingPage = () => {
                       showLineNumbers={false}
                       theme={dracula}
                       customStyle={{
-                        fontSize: '12px',
+                        fontSize: '10px',
                         borderRadius: '8px',
                         background: 'rgba(0, 0, 0, 0.2)',
                       }}
@@ -280,34 +283,34 @@ export const LandingPage = () => {
 
         {/* CTA Section */}
         {!user && (
-          <section className="py-24 px-6">
+          <section className="py-12 sm:py-24 px-4 sm:px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <h3 className="text-4xl font-bold mb-4">Ready to Get Started?</h3>
-              <p className="text-xl text-muted-foreground mb-8">
+              <h3 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 px-2">Ready to Get Started?</h3>
+              <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
                 Join thousands of developers building with KVS++ Cloud
               </p>
-              <Button size="lg" onClick={login} className="group">
+              <Button size="lg" onClick={login} className="group w-full sm:w-auto mx-4 sm:mx-0">
                 Create Free Account
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
           </section>
         )}
 
         {/* Footer */}
-        <footer className="py-4 px-6">
-          <div className="border-t border-border pt-8 max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-4 gap-8">
-              <div className="md:col-span-2">
+        <footer className="py-4 px-4 sm:px-6">
+          <div className="border-t border-border pt-6 sm:pt-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+              <div className="sm:col-span-2 md:col-span-2">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                     <Database className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold">KVS++ Cloud</h1>
+                    <h1 className="text-lg sm:text-xl font-bold">KVS++ Cloud</h1>
                   </div>
                 </div>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-sm sm:text-base text-muted-foreground mb-4">
                   High-performance, thread-safe, in-memory key-value storage service
                   built with modern C++ and designed for the cloud.
                 </p>
@@ -323,26 +326,29 @@ export const LandingPage = () => {
                   </a>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-4">Product</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><a href="#" className="hover:text-foreground">Features</a></li>
-                  <li><a href="#" className="hover:text-foreground">Pricing</a></li>
-                  <li><a href="#" className="hover:text-foreground">Documentation</a></li>
-                  <li><a href="#" className="hover:text-foreground">API Reference</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Support</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><a href="#" className="hover:text-foreground">Help Center</a></li>
-                  <li><a href="#" className="hover:text-foreground">Contact</a></li>
-                  <li><a href="#" className="hover:text-foreground">Status</a></li>
-                  <li><a href="#" className="hover:text-foreground">Community</a></li>
-                </ul>
+              {/* Product and Support side by side on mobile, stacked on desktop */}
+              <div className="flex flex-row gap-4 sm:grid sm:grid-cols-2 md:grid-cols-1">
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-3 sm:mb-4">Product</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li><a href="#" className="hover:text-foreground">Features</a></li>
+                    <li><a href="#" className="hover:text-foreground">Pricing</a></li>
+                    <li><a href="#" className="hover:text-foreground">Documentation</a></li>
+                    <li><a href="#" className="hover:text-foreground">API Reference</a></li>
+                  </ul>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-3 sm:mb-4">Support</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li><a href="#" className="hover:text-foreground">Help Center</a></li>
+                    <li><a href="#" className="hover:text-foreground">Contact</a></li>
+                    <li><a href="#" className="hover:text-foreground">Status</a></li>
+                    <li><a href="#" className="hover:text-foreground">Community</a></li>
+                  </ul>
+                </div>
               </div>
             </div>
-            <div className="mt-12 pt-8 border-t border-border text-center text-muted-foreground text-sm">
+            <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center text-muted-foreground text-xs sm:text-sm">
               <p>&copy; {new Date().getFullYear()} KVS++ All rights reserved.</p>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { cn } from '@/lib/utils';
-import { AlertCircle, ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { AlertCircle, ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronLeft, ChevronUp } from 'lucide-react';
 
 export type ConsoleMessage =
     | { role: 'system'; text: string }
@@ -25,6 +25,7 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
     const [connecting, setConnecting] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isCommandsPanelOpen, setIsCommandsPanelOpen] = useState(true);
+    const [isMobileCommandsOpen, setIsMobileCommandsOpen] = useState(false);
     const wsRef = useRef<WebSocket | null>(null);
     const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -124,26 +125,26 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
     };
 
     return (
-        <Card className={cn('p-4 sm:p-6 flex flex-col h-[70vh] md:h-[72vh] min-h-[400px]', className)} style={{ overflow: 'hidden' }}>
-            <div className="flex items-center justify-between mb-3">
-                <div>
-                    <div className="text-sm text-muted-foreground">Store</div>
-                    <div className="font-medium break-all">{storeToken}</div>
+        <Card className={cn('p-3 sm:p-4 md:p-6 flex flex-col h-[70vh] md:h-[72vh] min-h-[400px]', className)} style={{ overflow: 'hidden' }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2 sm:gap-0">
+                <div className="w-full sm:w-auto">
+                    <div className="text-xs sm:text-sm text-muted-foreground">Store</div>
+                    <div className="font-medium break-all text-sm sm:text-base">{storeToken}</div>
                 </div>
-                <div className="text-right text-sm">
+                <div className="text-left sm:text-right text-xs sm:text-sm">
                     {connecting && <span className="text-muted-foreground">Connecting…</span>}
                     {!connecting && connected && <span className="text-green-600">Connected</span>}
                     {!connecting && !connected && <span className="text-red-600">Disconnected</span>}
                 </div>
             </div>
 
-            <div className="flex flex-1 gap-6 min-h-0">
-                <div className="flex-1 overflow-auto rounded-md bg-muted p-3 text-sm min-h-0">
+            <div className="flex flex-1 gap-3 sm:gap-4 md:gap-6 min-h-0">
+                <div className="flex-1 overflow-auto rounded-md bg-muted p-2 sm:p-3 text-sm min-h-0">
                     {messages.map((m, idx) => (
                         <div
                             key={idx}
                             className={cn(
-                                'text-lg whitespace-pre-wrap break-words flex items-center gap-2',
+                                'text-sm sm:text-base md:text-lg whitespace-pre-wrap break-words flex items-start gap-1.5 sm:gap-2 mb-1',
                                 {
                                     'italic text-muted-foreground': m.role === 'system',
                                     'font-semibold text-blue-600': m.role === 'client',
@@ -152,17 +153,17 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
                             )}
                         >
                             {m.role === 'system' && (
-                                <span className="inline-block align-middle" title="System">
-                                    <AlertCircle className="w-5 h-5" />
+                                <span className="inline-block flex-shrink-0 mt-0.5" title="System">
+                                    <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </span>
                             )}
-                            {m.role === 'client' && <span className="inline-block align-middle" title="Client">
-                                <ArrowUpCircle className="w-5 h-5" />
+                            {m.role === 'client' && <span className="inline-block flex-shrink-0 mt-0.5" title="Client">
+                                <ArrowUpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                             </span>}
-                            {m.role === 'server' && <span className="inline-block align-middle" title="Server">
-                                <ArrowDownCircle className="w-5 h-5" />
+                            {m.role === 'server' && <span className="inline-block flex-shrink-0 mt-0.5" title="Server">
+                                <ArrowDownCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                             </span>}
-                            <span>{m.text}</span>
+                            <span className="flex-1 min-w-0">{m.text}</span>
                         </div>
                     ))}
                     <div ref={endRef} />
@@ -171,14 +172,14 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
                     <>
                         <div
                             className={cn(
-                                "hidden md:flex flex-col bg-card border rounded-lg shadow-sm h-full min-h-0 overflow-hidden transition-all duration-500 ease-in-out",
+                                "hidden lg:flex flex-col bg-card border rounded-lg shadow-sm h-full min-h-0 overflow-hidden transition-all duration-500 ease-in-out",
                                 isCommandsPanelOpen ? "w-72 min-w-[18rem] max-w-[22rem] p-4" : "w-12 min-w-[3rem] p-0"
                             )}
                         >
                             {isCommandsPanelOpen ? (
                                 <>
                                     <div className="flex items-center justify-between mb-2 animate-in fade-in duration-300">
-                                        <div className="font-semibold text-lg text-primary">Available Commands</div>
+                                        <div className="font-semibold text-base lg:text-lg text-primary">Available Commands</div>
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -188,11 +189,11 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
                                             <ChevronRight className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                    <ul className="space-y-3 overflow-y-auto flex-1 pr-2 min-h-0 animate-in fade-in duration-300">
+                                    <ul className="space-y-2 lg:space-y-3 overflow-y-auto flex-1 pr-2 min-h-0 animate-in fade-in duration-300">
                                         {availableCommands.map((c) => (
-                                            <li key={c.cmd} className="bg-muted/60 rounded-md px-3 py-2 hover:bg-muted/80 transition-colors">
-                                                <div className="font-mono text-sm text-foreground mb-1">{c.cmd}</div>
-                                                <div className="text-xs text-muted-foreground">{c.desc}</div>
+                                            <li key={c.cmd} className="bg-muted/60 rounded-md px-2.5 lg:px-3 py-1.5 lg:py-2 hover:bg-muted/80 transition-colors">
+                                                <div className="font-mono text-xs lg:text-sm text-foreground mb-0.5 lg:mb-1">{c.cmd}</div>
+                                                <div className="text-[10px] lg:text-xs text-muted-foreground">{c.desc}</div>
                                             </li>
                                         ))}
                                     </ul>
@@ -205,7 +206,7 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
                                 >
                                     <div className="flex flex-col items-center justify-center h-full">
                                         <div
-                                            className="text-sm font-semibold text-primary whitespace-nowrap"
+                                            className="text-xs lg:text-sm font-semibold text-primary whitespace-nowrap"
                                             style={{
                                                 writingMode: 'vertical-rl',
                                                 textOrientation: 'mixed',
@@ -227,23 +228,57 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
             </div>
 
             {error && (
-                <div className="text-xs text-red-600 mt-2" role="alert">{error}</div>
+                <div className="text-xs sm:text-sm text-red-600 mt-2" role="alert">{error}</div>
             )}
 
-            <div className="mt-3 flex gap-2">
+            {/* Mobile Commands Reference */}
+            {connected && (
+                <div className="lg:hidden mt-3">
+                    <button
+                        onClick={() => setIsMobileCommandsOpen(!isMobileCommandsOpen)}
+                        className="w-full flex items-center justify-between p-2 sm:p-3 bg-muted/50 hover:bg-muted/70 rounded-lg border border-border transition-colors"
+                    >
+                        <span className="font-semibold text-xs sm:text-sm text-primary">Quick Reference</span>
+                        <ChevronUp className={cn(
+                            "h-4 w-4 text-primary transition-transform duration-300",
+                            isMobileCommandsOpen && "rotate-180"
+                        )} />
+                    </button>
+                    <div className={cn(
+                        "overflow-hidden transition-all duration-300 ease-in-out",
+                        isMobileCommandsOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
+                    )}>
+                        <div className="p-2 sm:p-3 bg-muted/30 rounded-lg border border-border">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
+                                {availableCommands.map((c) => (
+                                    <div key={c.cmd} className="font-mono text-foreground bg-muted/60 rounded px-2 py-1">
+                                        <div className="font-semibold">{c.cmd}</div>
+                                        <div className="text-muted-foreground mt-0.5">{c.desc}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-2 sm:mt-3 flex gap-2">
                 <Input
                     placeholder={connected ? 'Type a command like: GET mykey' : 'Connecting…'}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={onKeyDown}
                     disabled={!connected}
-                    className="flex-1 !text-lg"
+                    className="flex-1 text-sm sm:text-base !md:text-lg"
                 />
-                <Button onClick={sendCommand} disabled={!connected || !input.trim()}>Send</Button>
+                <Button onClick={sendCommand} disabled={!connected || !input.trim()} className="px-3 sm:px-4">
+                    Send
+                </Button>
             </div>
 
-            <div className="mt-2 text-sm text-muted-foreground">
-                Tip: Commands mimic TCP connection behavior. SELECT is handled automatically and is forbidden on the cloud version.
+            <div className="mt-2 text-xs sm:text-sm text-muted-foreground">
+                <span className="hidden sm:inline">Tip: Commands mimic TCP connection behavior. SELECT is handled automatically and is forbidden on the cloud version.</span>
+                <span className="sm:hidden">Tip: SELECT is handled automatically.</span>
             </div>
         </Card>
     );

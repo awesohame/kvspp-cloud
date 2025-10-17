@@ -9,11 +9,20 @@ export function DashboardLayout() {
         <div className="relative h-full w-full bg-background"><div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,#0E0040,transparent)]"></div></div>
       </div>
       <div className="h-screen flex">
-        <div className="w-64 flex-shrink-0">
+        {/* Sidebar - hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block flex-shrink-0">
           <Sidebar />
         </div>
+
+        {/* Mobile sidebar (rendered within Sidebar component as drawer) */}
+        <div className="lg:hidden">
+          <Sidebar />
+        </div>
+
+        {/* Main content area */}
         <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
+          {/* Add padding-top on mobile for fixed header */}
+          <div className="h-full overflow-y-auto pt-[57px] lg:pt-0">
             <Outlet />
           </div>
         </div>

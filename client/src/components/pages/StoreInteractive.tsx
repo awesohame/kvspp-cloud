@@ -9,26 +9,28 @@ export default function StoreInteractive() {
 
     if (!token) {
         return (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
                 <Button variant="ghost" onClick={() => navigate('/dashboard/stores')}>
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Stores
                 </Button>
-                <div className="mt-10 text-muted-foreground">Invalid store token.</div>
+                <div className="mt-10 text-sm sm:text-base text-muted-foreground">Invalid store token.</div>
             </div>
         );
     }
 
     return (
-        <div className="p-6">
-            <div className="max-w-7xl mx-auto space-y-4">
-                <div className="flex items-center justify-between">
+        <div className="p-4 sm:p-6">
+            <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+                <div>
                     <Button variant="ghost" onClick={() => navigate(`/dashboard/stores/${token}`)}>
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Store
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Back to Store</span>
+                        <span className="sm:hidden">Back</span>
                     </Button>
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-bold">Interactive Mode</h1>
-                <p className="text-muted-foreground">Send commands to your store directly and see responses instantly.</p>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Interactive Mode</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Send commands to your store directly and see responses instantly.</p>
 
                 <InteractiveConsole storeToken={token} />
             </div>
