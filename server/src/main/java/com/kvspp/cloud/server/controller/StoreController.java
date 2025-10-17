@@ -81,13 +81,24 @@ public class StoreController {
             return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
         }
         Set<Store> stores = userOpt.get().getStores();
-        List<Map<String, Object>> storeList = stores.stream().map(store -> Map.of(
-                "token", (Object) store.getToken(),
-                "name", store.getName(),
-                "description", store.getDescription(),
-                "createdAt", store.getCreatedAt()
-        // "updatedAt", store.getUpdatedAt()
-        )).collect(Collectors.toList());
+        List<Map<String, Object>> storeList = stores.stream().map(store -> {
+            // Create a list of user information for all owners
+            List<Map<String, Object>> users = store.getOwners().stream().map(user -> {
+                Map<String, Object> userInfo = new HashMap<>();
+                userInfo.put("id", user.getId());
+                userInfo.put("email", user.getEmail());
+                userInfo.put("name", user.getName());
+                return userInfo;
+            }).collect(Collectors.toList());
+
+            Map<String, Object> storeInfo = new HashMap<>();
+            storeInfo.put("token", store.getToken());
+            storeInfo.put("name", store.getName());
+            storeInfo.put("description", store.getDescription());
+            storeInfo.put("createdAt", store.getCreatedAt());
+            storeInfo.put("users", users);
+            return storeInfo;
+        }).collect(Collectors.toList());
         return ResponseEntity.ok(new ApiResponse("success", "Stores fetched", storeList));
     }
 

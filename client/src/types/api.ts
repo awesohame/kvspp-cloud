@@ -16,6 +16,11 @@ export interface Store {
   createdAt: string;
   updatedAt?: string;
   store: StoreKV;
+  users?: {
+    email: string;
+    id: string;
+    name: string;
+  }[];
 }
 
 export interface StoreData {
