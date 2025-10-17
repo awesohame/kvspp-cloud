@@ -20,7 +20,7 @@ export default function StoreInteractive() {
 
     return (
         <div className="p-6">
-            <div className="max-w-6xl mx-auto space-y-4">
+            <div className="max-w-7xl mx-auto space-y-4">
                 <div className="flex items-center justify-between">
                     <Button variant="ghost" onClick={() => navigate(`/dashboard/stores/${token}`)}>
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Store

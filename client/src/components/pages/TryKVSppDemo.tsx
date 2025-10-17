@@ -8,7 +8,7 @@ export default function TryKVSppDemo() {
     const { user, login } = useAuth();
     return (
         <div className="p-6">
-            <div className="max-w-2xl mx-auto space-y-4">
+            <div className="max-w-6xl mx-auto space-y-4">
                 <div className="flex flex-wrap gap-2 mb-4">
                     <Link to="/">
                         <Button variant="outline">
