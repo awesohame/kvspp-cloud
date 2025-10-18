@@ -1,6 +1,7 @@
 package com.kvspp.cloud.server.websocket;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -19,6 +20,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private DemoTcpProxyWebSocketHandler demoTcpProxyWebSocketHandler;
 
+    @Value("${client.url}")
+    private String clientUrl;
+
     private static final Logger logger = LoggerFactory.getLogger(WebSocketConfig.class);
 
     @Override
@@ -26,9 +30,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
         logger.info("Registering WebSocket handler at /ws/tcp-proxy");
         registry.addHandler(tcpProxyWebSocketHandler, "/ws/tcp-proxy")
             .addInterceptors(new HttpSessionHandshakeInterceptor(), new AuthHandshakeInterceptor())
-            .setAllowedOrigins("http://localhost:5173");
+            .setAllowedOrigins(clientUrl);
         logger.info("Registering Demo WebSocket handler at /ws/tcp-proxy-demo");
         registry.addHandler(demoTcpProxyWebSocketHandler, "/ws/tcp-proxy-demo")
-            .setAllowedOrigins("http://localhost:5173");
+            .setAllowedOrigins(clientUrl);
     }
 }

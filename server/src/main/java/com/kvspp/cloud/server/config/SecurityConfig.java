@@ -14,11 +14,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class SecurityConfig {
     @Autowired
     private UserService userService;
+
+    @Value("${client.url}")
+    private String clientUrl;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -47,14 +51,14 @@ public class SecurityConfig {
                                     userService.persistUserFromAttributes(oidcUser.getAttributes());
                                     return oidcUser;
                                 }))
-                        .defaultSuccessUrl("http://localhost:5173/", true));
+                        .defaultSuccessUrl(clientUrl + "/", true));
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of(clientUrl));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
