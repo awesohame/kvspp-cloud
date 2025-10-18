@@ -1,7 +1,7 @@
 import { User, Store } from '../types/api';
 
 // Use environment variable with fallback for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 class ApiService {
   private async request<T>(
