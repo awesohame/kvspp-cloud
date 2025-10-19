@@ -33,10 +33,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkAuthStatus = async () => {
+    // Check if token exists
+    const token = localStorage.getItem('auth_token');
+    console.log('AuthContext - checkAuthStatus called, token exists:', !!token);
+    
+    if (!token) {
+      console.log('AuthContext - No token found, setting user to null');
+      dispatch({ type: 'SET_USER', payload: null });
+      return;
+    }
+
     try {
+      console.log('AuthContext - Fetching user with token...');
       const user = await apiService.getUser();
+      console.log('AuthContext - User fetched successfully:', user);
       dispatch({ type: 'SET_USER', payload: user });
     } catch (error: unknown) {
+      // Token is invalid, clear it
+      console.error('AuthContext - Failed to fetch user, CLEARING TOKEN:', error);
+      localStorage.removeItem('auth_token');
       dispatch({ type: 'SET_USER', payload: null });
       console.error('Failed to fetch user', error);
     }
@@ -51,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await apiService.logout();
+      localStorage.removeItem('auth_token');
       dispatch({ type: 'SET_USER', payload: null });
     } catch (error: unknown) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to logout' });
@@ -61,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = async () => {
     try {
       await apiService.deleteAccount();
+      localStorage.removeItem('auth_token');
       dispatch({ type: 'SET_USER', payload: null });
     } catch (error: unknown) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete account' });

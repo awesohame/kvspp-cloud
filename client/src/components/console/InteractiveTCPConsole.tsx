@@ -43,24 +43,45 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
 
     const wsUrl = useMemo(() => {
         const origin = import.meta.env.VITE_WS_BASE_URL;
+        const token = localStorage.getItem('auth_token');
+
+        let url: string;
         if (wsPath) {
-            return `${origin}${wsPath}`;
+            url = `${origin}${wsPath}`;
+        } else {
+            url = `${origin}/ws/tcp-proxy?storeToken=${encodeURIComponent(storeToken)}`;
         }
-        return `${origin}/ws/tcp-proxy?storeToken=${encodeURIComponent(storeToken)}`;
+
+        console.log('WebSocket - Token exists:', !!token);
+        console.log('WebSocket - Base URL:', url);
+
+        // Add JWT token as query parameter if it exists
+        if (token) {
+            const separator = url.includes('?') ? '&' : '?';
+            url = `${url}${separator}token=${encodeURIComponent(token)}`;
+            console.log('WebSocket - Token added to URL (first 50 chars of token):', token.substring(0, 50));
+        } else {
+            console.log('WebSocket - No token available, connecting without auth');
+        }
+
+        return url;
     }, [storeToken, wsPath]);
 
     useEffect(() => {
+        console.log('WebSocket - Creating connection to:', wsUrl);
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
         setConnecting(true);
         setError(null);
 
         ws.onopen = () => {
+            console.log('WebSocket - Connection opened successfully');
             setConnected(true);
             setConnecting(false);
         };
 
         ws.onmessage = (event) => {
+            console.log('WebSocket - Received message:', event.data);
             try {
                 const data = JSON.parse(event.data);
                 if (data?.type === 'select_response') {
@@ -77,7 +98,8 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
             }
         };
 
-        ws.onerror = () => {
+        ws.onerror = (error) => {
+            console.error('WebSocket - Error occurred:', error);
             setError('WebSocket error. Ensure you are logged in and have access to this store.');
         };
 
@@ -112,6 +134,7 @@ export function InteractiveConsole({ storeToken, className, wsPath }: Interactiv
         }
 
         const payload = { type: 'command', payload: { command } };
+        console.log('WebSocket - Sending command:', JSON.stringify(payload));
         wsRef.current.send(JSON.stringify(payload));
         setMessages((prev) => [...prev, { role: 'client', text: command }]);
         setInput('');

@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/ContextHooks';
 import { StoreProvider } from './context/StoreContext';
 import { LandingPage } from './components/pages/LandingPage';
+import { AuthCallback } from './components/pages/AuthCallback';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { Stores } from './components/pages/Stores';
 import { StoreDetail } from './components/pages/StoreDetail';
@@ -67,6 +68,9 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      
+      {/* Auth Callback Route */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* Protected Routes */}
       <Route

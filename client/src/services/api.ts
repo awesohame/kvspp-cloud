@@ -8,16 +8,43 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    const token = localStorage.getItem('auth_token');
+    console.log('API Request - Endpoint:', endpoint);
+    console.log('API Request - Token exists:', !!token);
+    console.log('API Request - Token (first 50 chars):', token?.substring(0, 50));
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      console.log('API Request - Authorization header set:', headers['Authorization'].substring(0, 70));
+    }
+
+    // Merge with any existing headers from options
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
+
+    console.log('API Request - Full URL:', `${API_BASE_URL}${endpoint}`);
+    console.log('API Request - Headers:', headers);
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     });
 
+    console.log('API Response - Status:', response.status);
+
     if (!response.ok) {
+      // If unauthorized, clear token and throw error
+      if (response.status === 401) {
+        console.error('API Request - 401 Unauthorized, clearing token');
+        localStorage.removeItem('auth_token');
+      }
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
@@ -31,10 +58,14 @@ class ApiService {
 
   async logout(): Promise<void> {
     await this.request('/account/logout', { method: 'POST' });
+    // Clear token after successful logout
+    localStorage.removeItem('auth_token');
   }
 
   async deleteAccount(): Promise<void> {
     await this.request('/account/delete', { method: 'DELETE' });
+    // Clear token after account deletion
+    localStorage.removeItem('auth_token');
   }
 
   // Store management
