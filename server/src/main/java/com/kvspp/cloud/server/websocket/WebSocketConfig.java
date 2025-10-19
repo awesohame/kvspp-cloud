@@ -1,5 +1,7 @@
 package com.kvspp.cloud.server.websocket;
 
+import com.kvspp.cloud.server.repository.UserRepository;
+import com.kvspp.cloud.server.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +22,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private DemoTcpProxyWebSocketHandler demoTcpProxyWebSocketHandler;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @Value("${client.url}")
     private String clientUrl;
 
@@ -29,10 +37,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         logger.info("Registering WebSocket handler at /ws/tcp-proxy");
         registry.addHandler(tcpProxyWebSocketHandler, "/ws/tcp-proxy")
-            .addInterceptors(new HttpSessionHandshakeInterceptor(), new AuthHandshakeInterceptor())
+            .addInterceptors(new HttpSessionHandshakeInterceptor(), new AuthHandshakeInterceptor(jwtUtil, userRepository))
             .setAllowedOrigins(clientUrl);
+
         logger.info("Registering Demo WebSocket handler at /ws/tcp-proxy-demo");
         registry.addHandler(demoTcpProxyWebSocketHandler, "/ws/tcp-proxy-demo")
+            .addInterceptors(new DemoHandshakeInterceptor())
             .setAllowedOrigins(clientUrl);
     }
 }

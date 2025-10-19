@@ -8,10 +8,14 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.kvspp.cloud.server.service.UserService;
+import com.kvspp.cloud.server.security.JwtAuthenticationFilter;
+import com.kvspp.cloud.server.security.OAuth2AuthenticationSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.http.HttpStatus;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +24,12 @@ import org.springframework.beans.factory.annotation.Value;
 public class SecurityConfig {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Value("${client.url}")
     private String clientUrl;
@@ -30,6 +40,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
@@ -51,7 +62,8 @@ public class SecurityConfig {
                                     userService.persistUserFromAttributes(oidcUser.getAttributes());
                                     return oidcUser;
                                 }))
-                        .defaultSuccessUrl(clientUrl + "/", true));
+                        .successHandler(oAuth2AuthenticationSuccessHandler))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

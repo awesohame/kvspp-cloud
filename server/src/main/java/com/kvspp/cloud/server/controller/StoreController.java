@@ -9,17 +9,20 @@ import com.kvspp.cloud.server.service.StoreAccessService;
 import com.kvspp.cloud.server.service.AccessResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/store")
 public class StoreController {
+
+    private static final Logger logger = LoggerFactory.getLogger(StoreController.class);
+
     @Autowired
     private StoreRepository storeRepository;
     @Autowired
@@ -30,16 +33,18 @@ public class StoreController {
     private StoreAccessService storeAccessService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse> createStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> createStore(@AuthenticationPrincipal User user, HttpServletRequest request,
             @RequestBody Map<String, String> body) {
-        if (principal == null) {
+        logger.info("POST /store - createStore called");
+        logger.info("Authorization header: " + (request.getHeader("Authorization") != null ? "Present" : "MISSING"));
+
+        if (user == null) {
+            logger.warn("✗ Create store failed: User is NULL (not authenticated)");
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
+
+        logger.info("✓ User authenticated: " + user.getEmail());
+
         String name = body.get("name");
         String description = body.getOrDefault("description", "");
         if (name == null || name.isBlank()) {
@@ -60,10 +65,13 @@ public class StoreController {
         store.setToken(token);
         store.setName(name);
         store.setDescription(description);
-        store.getOwners().add(userOpt.get());
+        store.getOwners().add(user);
         storeRepository.save(store);
-        userOpt.get().getStores().add(store);
-        userRepository.save(userOpt.get());
+        user.getStores().add(store);
+        userRepository.save(user);
+
+        logger.info("✓ Store created successfully: " + store.getName() + " (token: " + store.getToken() + ")");
+
         return ResponseEntity.ok(new ApiResponse("success", "Store created", Map.of(
                 "token", store.getToken(),
                 "name", store.getName(),
@@ -71,23 +79,27 @@ public class StoreController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse> listStores(@AuthenticationPrincipal OAuth2User principal) {
-        if (principal == null) {
+    public ResponseEntity<ApiResponse> listStores(@AuthenticationPrincipal User user, HttpServletRequest request) {
+        logger.info("GET /store - listStores called");
+        logger.info("Authorization header: " + (request.getHeader("Authorization") != null ? "Present" : "MISSING"));
+
+        if (user == null) {
+            logger.warn("✗ List stores failed: User is NULL (not authenticated)");
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
-        Set<Store> stores = userOpt.get().getStores();
+
+        logger.info("✓ User authenticated: " + user.getEmail());
+
+        Set<Store> stores = user.getStores();
+        logger.info("Found " + stores.size() + " stores for user");
+
         List<Map<String, Object>> storeList = stores.stream().map(store -> {
             // Create a list of user information for all owners
-            List<Map<String, Object>> users = store.getOwners().stream().map(user -> {
+            List<Map<String, Object>> users = store.getOwners().stream().map(owner -> {
                 Map<String, Object> userInfo = new HashMap<>();
-                userInfo.put("id", user.getId());
-                userInfo.put("email", user.getEmail());
-                userInfo.put("name", user.getName());
+                userInfo.put("id", owner.getId());
+                userInfo.put("email", owner.getEmail());
+                userInfo.put("name", owner.getName());
                 return userInfo;
             }).collect(Collectors.toList());
 
@@ -99,27 +111,37 @@ public class StoreController {
             storeInfo.put("users", users);
             return storeInfo;
         }).collect(Collectors.toList());
+
+        logger.info("✓ Returning " + storeList.size() + " stores");
+
         return ResponseEntity.ok(new ApiResponse("success", "Stores fetched", storeList));
     }
 
     @GetMapping("/{token}")
-    public ResponseEntity<ApiResponse> getStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> getStore(@AuthenticationPrincipal User user, HttpServletRequest request,
             @PathVariable("token") String token) {
-        if (principal == null) {
+        logger.info("GET /store/" + token + " - getStore called");
+        logger.info("Authorization header: " + (request.getHeader("Authorization") != null ? "Present" : "MISSING"));
+
+        if (user == null) {
+            logger.warn("✗ Get store failed: User is NULL (not authenticated)");
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
+
+        logger.info("✓ User authenticated: " + user.getEmail());
+
         Store store = storeRepository.findByToken(token);
         if (store == null) {
+            logger.warn("Store not found: " + token);
             return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
         }
-        if (!store.getOwners().contains(userOpt.get())) {
+        if (!store.getOwners().contains(user)) {
+            logger.warn("User " + user.getEmail() + " is not an owner of store: " + token);
             return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
         }
+
+        logger.info("✓ User is owner of store, fetching store data from TCP server");
+
         try {
             // First, load the store
             // String loadResult = kvsppTcpClientService.sendCommand(token, "LOAD " +
@@ -174,21 +196,23 @@ public class StoreController {
     }
 
     @DeleteMapping("/{token}")
-    public ResponseEntity<ApiResponse> deleteStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> deleteStore(@AuthenticationPrincipal User user, HttpServletRequest request,
             @PathVariable("token") String token) {
-        if (principal == null) {
+        logger.info("DELETE /store/" + token + " - deleteStore called");
+        logger.info("Authorization header: " + (request.getHeader("Authorization") != null ? "Present" : "MISSING"));
+
+        if (user == null) {
+            logger.warn("✗ Delete store failed: User is NULL (not authenticated)");
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
+
+        logger.info("✓ User authenticated: " + user.getEmail());
+
         Store store = storeRepository.findByToken(token);
         if (store == null) {
             return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
         }
-        if (!store.getOwners().contains(userOpt.get())) {
+        if (!store.getOwners().contains(user)) {
             return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
         }
         // Remove the store from all owners' store sets to clear the join table
@@ -200,25 +224,30 @@ public class StoreController {
         store.getOwners().clear();
         storeRepository.save(store);
         storeRepository.delete(store);
+
+        logger.info("✓ Store deleted: " + token);
+
         return ResponseEntity.ok(new ApiResponse("success", "Store deleted"));
     }
 
     @PutMapping("/{token}")
-    public ResponseEntity<ApiResponse> updateStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> updateStore(@AuthenticationPrincipal User user, HttpServletRequest request,
             @PathVariable("token") String token, @RequestBody Map<String, String> body) {
-        if (principal == null) {
+        logger.info("PUT /store/" + token + " - updateStore called");
+        logger.info("Authorization header: " + (request.getHeader("Authorization") != null ? "Present" : "MISSING"));
+
+        if (user == null) {
+            logger.warn("✗ Update store failed: User is NULL (not authenticated)");
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
+
+        logger.info("✓ User authenticated: " + user.getEmail());
+
         Store store = storeRepository.findByToken(token);
         if (store == null) {
             return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
         }
-        if (!store.getOwners().contains(userOpt.get())) {
+        if (!store.getOwners().contains(user)) {
             return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
         }
         boolean changed = false;
@@ -235,6 +264,7 @@ public class StoreController {
         }
         if (changed) {
             storeRepository.save(store);
+            logger.info("✓ Store updated: " + token);
             return ResponseEntity.ok(new ApiResponse("success", "Store updated"));
         } else {
             return ResponseEntity.ok(new ApiResponse("success", "Store updated", Map.of(
@@ -242,27 +272,28 @@ public class StoreController {
                     "name", store.getName(),
                     "description", store.getDescription(),
                     "createdAt", store.getCreatedAt()
-            // "updatedAt", store.getUpdatedAt()
             )));
         }
     }
 
     @PostMapping("/{token}/owners")
-    public ResponseEntity<ApiResponse> addOwnerToStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> addOwnerToStore(@AuthenticationPrincipal User user, HttpServletRequest request,
             @PathVariable("token") String token, @RequestBody Map<String, String> body) {
-        if (principal == null) {
+        logger.info("POST /store/" + token + "/owners - addOwnerToStore called");
+        logger.info("Authorization header: " + (request.getHeader("Authorization") != null ? "Present" : "MISSING"));
+
+        if (user == null) {
+            logger.warn("✗ Add owner failed: User is NULL (not authenticated)");
             return ResponseEntity.status(401).body(new ApiResponse("error", "Not authenticated"));
         }
-        String googleId = (String) principal.getAttribute("sub");
-        Optional<User> userOpt = userRepository.findByGoogleId(googleId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(new ApiResponse("error", "User not found"));
-        }
+
+        logger.info("✓ User authenticated: " + user.getEmail());
+
         Store store = storeRepository.findByToken(token);
         if (store == null) {
             return ResponseEntity.status(404).body(new ApiResponse("error", "Store not found"));
         }
-        if (!store.getOwners().contains(userOpt.get())) {
+        if (!store.getOwners().contains(user)) {
             return ResponseEntity.status(403).body(new ApiResponse("error", "Forbidden: not an owner of this store"));
         }
         String email = body.get("email");
@@ -281,16 +312,18 @@ public class StoreController {
         newOwner.getStores().add(store);
         storeRepository.save(store);
         userRepository.save(newOwner);
+
+        logger.info("✓ Owner added to store: " + email);
+
         return ResponseEntity.ok(new ApiResponse("success", "Owner added to store"));
     }
 
     // --- KVS++ TCP Endpoints ---
 
     @GetMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> getValue(@AuthenticationPrincipal User user,
             @PathVariable("token") String token, @PathVariable("key") String key) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        AccessResult access = storeAccessService.checkAccess(user, token);
         if (!access.allowed)
             return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         try {
@@ -311,11 +344,10 @@ public class StoreController {
     }
 
     @PutMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> putValue(@AuthenticationPrincipal User user,
             @PathVariable("token") String token, @PathVariable("key") String key,
             @RequestBody Map<String, String> body) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        AccessResult access = storeAccessService.checkAccess(user, token);
         if (!access.allowed)
             return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         String value = body.get("value");
@@ -336,10 +368,9 @@ public class StoreController {
     }
 
     @DeleteMapping("/{token}/{key}")
-    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> deleteValue(@AuthenticationPrincipal User user,
             @PathVariable("token") String token, @PathVariable("key") String key) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        AccessResult access = storeAccessService.checkAccess(user, token);
         if (!access.allowed)
             return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         try {
@@ -357,10 +388,9 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/save")
-    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> saveStore(@AuthenticationPrincipal User user,
             @PathVariable("token") String token) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        AccessResult access = storeAccessService.checkAccess(user, token);
         if (!access.allowed)
             return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         String filename = token;
@@ -380,10 +410,9 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/load")
-    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> loadStore(@AuthenticationPrincipal User user,
             @PathVariable("token") String token) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        AccessResult access = storeAccessService.checkAccess(user, token);
         if (!access.allowed)
             return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         String filename = token;
@@ -403,10 +432,9 @@ public class StoreController {
     }
 
     @PostMapping("/{token}/autosave")
-    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<ApiResponse> setAutosave(@AuthenticationPrincipal User user,
             @PathVariable("token") String token, @RequestBody Map<String, Object> body) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AccessResult access = storeAccessService.checkAccess(authentication, token);
+        AccessResult access = storeAccessService.checkAccess(user, token);
         if (!access.allowed)
             return ResponseEntity.status(403).body(new ApiResponse("error", access.errorMessage));
         Object autosaveObj = body.get("autosave");

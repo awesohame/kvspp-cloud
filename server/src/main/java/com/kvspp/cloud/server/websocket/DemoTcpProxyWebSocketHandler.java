@@ -9,19 +9,4 @@ public class DemoTcpProxyWebSocketHandler extends AbstractTcpProxyWebSocketHandl
     protected String resolveStoreToken(WebSocketSession session) {
         return "public";
     }
-
-    @Override
-    protected boolean isAccessAllowed(WebSocketSession session, String storeToken) {
-        // always allow access for demo
-        return true;
-    }
-
-    @Override
-    protected void handleAccessDenied(WebSocketSession session, String errorMessage) {
-        // fallback
-        try {
-            sendJsonError(session, errorMessage);
-        } catch (Exception ignored) {}
-    }
 }
-

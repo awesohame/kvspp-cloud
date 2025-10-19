@@ -19,8 +19,6 @@ public abstract class AbstractTcpProxyWebSocketHandler extends TextWebSocketHand
     protected final ConcurrentHashMap<String, TcpSession> sessionMap = new ConcurrentHashMap<>();
 
     protected abstract String resolveStoreToken(WebSocketSession session);
-    protected abstract boolean isAccessAllowed(WebSocketSession session, String storeToken);
-    protected abstract void handleAccessDenied(WebSocketSession session, String errorMessage) throws IOException;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -30,11 +28,7 @@ public abstract class AbstractTcpProxyWebSocketHandler extends TextWebSocketHand
             session.close();
             return;
         }
-        if (!isAccessAllowed(session, storeToken)) {
-            handleAccessDenied(session, "Access denied");
-            session.close();
-            return;
-        }
+
         try {
             TcpSession tcpSession = tcpProxyService.openSession(storeToken);
             sessionMap.put(session.getId(), tcpSession);
